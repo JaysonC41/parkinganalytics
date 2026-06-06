@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+/data/raw/parking_clean.csv
+/data/raw/nyc_weather_daily.csv
+/data/raw/parking_fast.csv
+nycparkingbackup.zip
+.vscode
+.sixth
+MySQLCYou.session.sql
+nycpark.zip

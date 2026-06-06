@@ -1,0 +1,8 @@
+pandas
+sqlalchemy
+pymysql
+dash
+plotly
+typer
+python-dotenv
+requests
