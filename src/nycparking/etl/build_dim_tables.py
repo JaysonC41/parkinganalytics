@@ -7,15 +7,26 @@ def build_dim_tables():
     print("Building dimension tables")
 
     with engine.begin() as conn:
-        # keep existing dimension rows and only add new values
+        conn.execute(text("TRUNCATE TABLE dim_violation"))
+
         conn.execute(text("""
-            INSERT IGNORE INTO dim_violation
-            SELECT DISTINCT
+            INSERT INTO dim_violation (
                 violation_code,
                 violation_description,
-                fine_amount
-            FROM staging_parking
+                base_fine
+            )
+            SELECT
+                violation_code,
+                MAX(violation_description),
+                CAST(
+                    NULLIF(
+                        REGEXP_REPLACE(MAX(fine_amount), '[^0-9]', ''),
+                        ''
+                    ) AS UNSIGNED
+                )
+            FROM violation_lookup
             WHERE violation_code IS NOT NULL
+            GROUP BY violation_code
         """))
 
         conn.execute(text("""
