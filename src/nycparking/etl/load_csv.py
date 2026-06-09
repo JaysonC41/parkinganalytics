@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import pandas as pd
+from sqlalchemy import text
 
 from nycparking.core.db import engine
-from nycparking.core.db_utils import table_has_rows
+from nycparking.core.db_utils import table_exists, table_has_rows
 from nycparking.core.date_window import issue_date_window
 
 
@@ -34,6 +35,11 @@ def load_staging(force_reload: bool = False):
     min_issue_date, max_issue_date = issue_date_window()
     print(f"Keeping issue dates from {min_issue_date} through {max_issue_date}")
 
+    staging_exists = table_exists("staging_parking")
+    with engine.begin() as conn:
+        if staging_exists:
+            conn.execute(text("TRUNCATE TABLE staging_parking"))
+
     for chunk in pd.read_csv(data_file, low_memory=False, chunksize=100000):
         issue_dates = pd.to_datetime(chunk["issue_date"], errors="coerce")
         keep = issue_dates.between(min_issue_date, max_issue_date)
@@ -46,11 +52,12 @@ def load_staging(force_reload: bool = False):
         chunk.to_sql(
             "staging_parking",
             engine,
-            if_exists="replace" if first_chunk else "append",
+            if_exists="append" if staging_exists or not first_chunk else "replace",
             index=False,
             chunksize=10000,
             method="multi",
         )
+        staging_exists = True
         total_rows += len(chunk)
         first_chunk = False
         print(f"Loaded {total_rows:,} rows")
