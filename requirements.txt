@@ -6,3 +6,6 @@ plotly
 typer
 python-dotenv
 requests
+jupyter
+matplotlib
+seaborn

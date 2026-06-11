@@ -9,8 +9,8 @@ from nycparking.core.date_window import issue_date_window
 
 
 DATA_FILE_CANDIDATES = [
-    Path("data/raw/parking_fast.csv"),
-    Path("data/raw/parking_clean.csv"),
+    Path("data/processed/parking_clean.csv"),
+    Path("data/raw/nycparking2025.csv"),
 ]
 
 

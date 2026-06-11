@@ -12,7 +12,7 @@ from nycparking.core.date_window import issue_date_window
 
 
 DEFAULT_RAW_FILE = Path(r"C:\Users\jayson.coker\Documents\nycparking\data\nycparking2025.csv")
-OUT_FILE = Path("data/raw/parking_fast.csv")
+OUT_FILE = Path("data/processed/parking_clean.csv")
 
 SOURCE_COLUMNS = {
     "Summons Number": "summons_number",
