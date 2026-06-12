@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from nycparking.core.date_window import issue_date_window
 
 
-DEFAULT_RAW_FILE = Path(r"C:\Users\jayson.coker\Documents\nycparking\data\nycparking2025.csv")
+DEFAULT_RAW_FILE = Path("data/raw/nycparking2025.csv")
 OUT_FILE = Path("data/processed/parking_clean.csv")
 
 SOURCE_COLUMNS = {
@@ -34,7 +34,32 @@ SOURCE_COLUMNS = {
     "Violation Description": "violation_description",
 }
 
-OUTPUT_COLUMNS = list(SOURCE_COLUMNS.values())
+OUTPUT_COLUMNS = list(SOURCE_COLUMNS.values()) + [
+    "issue_year",
+    "issue_month",
+    "issue_day_of_week",
+    "issue_day_name",
+    "borough",
+]
+
+BOROUGH_MAP = {
+    "BRONX": "Bronx",
+    "BX": "Bronx",
+    "P": "Bronx",
+    "108": "Bronx",
+    "BK": "Brooklyn",
+    "K": "Brooklyn",
+    "K F": "Brooklyn",
+    "KINGS": "Brooklyn",
+    "Q": "Queens",
+    "QN": "Queens",
+    "QNS": "Queens",
+    "MN": "Manhattan",
+    "NY": "Manhattan",
+    "R": "Staten Island",
+    "RICH": "Staten Island",
+    "ST": "Staten Island",
+}
 
 
 def clean_csv(raw_file: Path = DEFAULT_RAW_FILE, out_file: Path = OUT_FILE) -> None:
@@ -48,6 +73,8 @@ def clean_csv(raw_file: Path = DEFAULT_RAW_FILE, out_file: Path = OUT_FILE) -> N
     total_rows = 0
     invalid_dates = 0
     outside_window = 0
+    duplicate_rows = 0
+    seen_summons: set[int] = set()
     min_issue_date, max_issue_date = issue_date_window()
     print(f"Keeping Issue Date from {min_issue_date} through {max_issue_date}")
 
@@ -59,6 +86,11 @@ def clean_csv(raw_file: Path = DEFAULT_RAW_FILE, out_file: Path = OUT_FILE) -> N
         dtype=str,
     ):
         chunk = chunk.rename(columns=SOURCE_COLUMNS)
+
+        text_columns = chunk.select_dtypes(include="object").columns
+        for column in text_columns:
+            chunk[column] = chunk[column].astype("string").str.strip()
+            chunk[column] = chunk[column].replace("", pd.NA)
 
         parsed_dates = pd.to_datetime(
             chunk["issue_date"],
@@ -79,6 +111,28 @@ def clean_csv(raw_file: Path = DEFAULT_RAW_FILE, out_file: Path = OUT_FILE) -> N
         chunk["issuer_precinct"] = pd.to_numeric(chunk["issuer_precinct"], errors="coerce")
 
         chunk = chunk.dropna(subset=["summons_number"])
+        chunk["summons_number"] = chunk["summons_number"].astype("int64")
+
+        rows_before_deduplication = len(chunk)
+        chunk = chunk.drop_duplicates(subset=["summons_number"], keep="first")
+        duplicate_mask = chunk["summons_number"].isin(seen_summons)
+        chunk = chunk.loc[~duplicate_mask].copy()
+        duplicate_rows += rows_before_deduplication - len(chunk)
+        seen_summons.update(chunk["summons_number"].tolist())
+
+        issue_dates = pd.to_datetime(chunk["issue_date"], format="%Y-%m-%d")
+        chunk["issue_year"] = issue_dates.dt.year
+        chunk["issue_month"] = issue_dates.dt.month
+        chunk["issue_day_of_week"] = issue_dates.dt.dayofweek
+        chunk["issue_day_name"] = issue_dates.dt.day_name()
+        county_key = (
+            chunk["violation_county"]
+            .astype("string")
+            .str.upper()
+            .str.replace(r"\s+", " ", regex=True)
+            .str.strip()
+        )
+        chunk["borough"] = county_key.map(BOROUGH_MAP)
         chunk = chunk[OUTPUT_COLUMNS]
 
         chunk.to_csv(
@@ -96,6 +150,7 @@ def clean_csv(raw_file: Path = DEFAULT_RAW_FILE, out_file: Path = OUT_FILE) -> N
     print(f"Rows written: {total_rows:,}")
     print(f"Rows skipped for invalid Issue Date: {invalid_dates:,}")
     print(f"Rows skipped outside Issue Date window: {outside_window:,}")
+    print(f"Duplicate summons removed: {duplicate_rows:,}")
 
 
 def main() -> None:
