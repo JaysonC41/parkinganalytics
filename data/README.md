@@ -12,6 +12,7 @@ Large raw data files are intentionally excluded from Git. The notebook and scrip
 | `nyc_weather_daily.csv` | 9,486 | 7 | Daily NYC weather data used to add weather context to parking violations by issue date. |
 | `fines_extracted_fixed.csv` | 91 | 3 | Cleaned violation fine lookup used to enrich each parking violation code with a readable violation description and the fine amount. |
 | `fines_extracted.csv` | 98 | 9 | Earlier extracted fine lookup source. This is kept for reproducibility but `fines_extracted_fixed.csv` is the analysis-ready version. |
+| `nyc_census_borough.csv` | 5 | 6 | Reproducible 2020 Census population extract for the five counties corresponding to NYC boroughs. |
 
 ## Capstone Source Strategy
 
@@ -31,3 +32,21 @@ The fine lookup is an important enrichment source. The original parking data has
 - an analysis-ready joined table that includes `violation_description` and `fine_amount`.
 
 Keeping the lookup as a separate table is preferred for the relational database because it avoids repeating the same violation description and fine amount millions of times.
+
+The fine calculation is an estimate based on the listed amount in the supplied schedule. It does not represent actual payments, penalties, reductions, or collected revenue.
+
+## SQLite Output
+
+The database builder creates `data/database/nyc_parking.sqlite`. The database is excluded from Git because it is approximately 1.5 GB and can be reproduced by running:
+
+```powershell
+python -m nycparking.sqlite.build_database
+```
+
+The database contains:
+
+- `parking_violations`
+- `weather_daily`
+- `violation_lookup`
+- `census_borough`
+- `source_metadata`

@@ -8,6 +8,10 @@ __pycache__/
 /data/raw/nyc_weather_daily.csv
 /data/raw/parking_fast.csv
 /data/processed/parking_clean.csv
+/data/database/*.sqlite
+/data/database/*.sqlite-shm
+/data/database/*.sqlite-wal
+/data/database/*.log
 nycparkingbackup.zip
 .vscode
 .sixth
