@@ -17,3 +17,4 @@ nycpark.zip
 /data/raw/fines_extracted_fixed.csv
 /data/raw/fines_extracted.csv
 random_info.sqlite
+/notebooks/data/parking_clean.csv
