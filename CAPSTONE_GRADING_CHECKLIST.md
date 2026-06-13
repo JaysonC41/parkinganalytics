@@ -10,10 +10,10 @@ This checklist translates the Code:You capstone requirements and rubric into con
 - No file uploader commits.
 
 Current status:
-- 5 commits currently exist.
+- 11 commits currently exist.
 
-Action needed:
-- Make at least 5 more meaningful command-line commits as the project is improved.
+Status:
+- The minimum requirement of 10 command-line commits is met.
 
 ### 2. Data Sources
 - Use at least 2 datasets.

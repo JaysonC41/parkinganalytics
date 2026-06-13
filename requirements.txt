@@ -7,5 +7,6 @@ typer
 python-dotenv
 requests
 jupyter
+nbconvert
 matplotlib
 seaborn
