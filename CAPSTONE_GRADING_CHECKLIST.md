@@ -10,7 +10,7 @@ This checklist translates the Code:You capstone requirements and rubric into con
 - No file uploader commits.
 
 Current status:
-- 11 commits currently exist.
+- 13 command-line commits existed before the final README and audit update.
 
 Status:
 - The minimum requirement of 10 command-line commits is met.
@@ -27,9 +27,10 @@ Project target:
 - Fine lookup dataset: violation code lookup joined by `violation_code` to add violation meaning and fine amount.
 - Census dataset: census population/demographic data, joined by NYC county/borough where possible.
 
-Action needed:
-- Document all sources in `README.md` and notebook markdown.
-- Clearly explain why each join is meaningful.
+Status:
+- All four sources are credited in `README.md`, `data/README.md`, notebook 02,
+  and the SQLite `source_metadata` table.
+- Join keys and analytical purpose are documented.
 
 ### 3. Data Cleaning & EDA
 - Use Pandas.
@@ -51,8 +52,9 @@ Project target:
 - Build the database in SQLite3 using Python.
 - Include at least 3 intermediate or advanced SQL queries.
 
-Important project adjustment:
-- Current project uses MySQL/PyMySQL. Final capstone should include a SQLite3 workflow because the rubric specifically requires SQLite3.
+Completed implementation:
+- The final workflow builds SQLite3 with Python. Earlier MySQL modules remain
+  as supporting project history but are not required for the final notebooks.
 
 Project target tables:
 - `parking_violations`
@@ -96,8 +98,9 @@ Project target visuals:
 - No typos or sloppy formatting.
 - Unnecessary/repetitive code is removed.
 
-Project target:
-- Create a main Jupyter notebook that walks from raw data to cleaned data, joins, SQLite load, SQL analysis, visualizations, and conclusions.
+Completed implementation:
+- Three ordered notebooks walk through cleaning, SQLite design and SQL, then
+  exploratory analysis, visualizations, and conclusions.
 
 ### 8. Repo & README
 - Professional `README.md`.
@@ -106,10 +109,10 @@ Project target:
 - Use relative paths.
 - README includes title, setup instructions, data source links, questions, findings, and tool acknowledgements.
 
-Project target:
-- Add a polished README with a unique title that does not include "capstone" or "Code:You".
-- Add setup instructions for Windows, macOS, and Linux.
-- Credit Python libraries, data sources, and AI assistance.
+Completed implementation:
+- `README.md` uses the unique title "Curbside Patterns: NYC Parking Analytics."
+- Setup and environment instructions cover Windows, macOS, and Linux.
+- Libraries, publishers, source links, and AI assistance are acknowledged.
 
 ## Recommended Analysis Questions
 
