@@ -180,7 +180,7 @@ errors.
 
 The project deliberately goes beyond the minimum technical requirements:
 
-- **Version control:** 13 command-line commits are present; 10 are required.
+- **Version control:** more than 10 command-line commits are present.
 - **Data:** four meaningfully related sources and more than 7 million rows.
 - **Cleaning and EDA:** missing values, duplicate summons numbers, invalid
   dates, data types, borough normalization, derived date fields, grouped
