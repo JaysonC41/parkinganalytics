@@ -53,8 +53,7 @@ Project target:
 - Include at least 3 intermediate or advanced SQL queries.
 
 Completed implementation:
-- The final workflow builds SQLite3 with Python. Earlier MySQL modules remain
-  as supporting project history but are not required for the final notebooks.
+- The final workflow builds SQLite3 with Python.
 
 Project target tables:
 - `parking_violations`

@@ -1,8 +1,8 @@
 # Project Requirements Audit
 
-This matrix maps the published project requirements to evidence in the
-repository. It is intended as a final submission check, not a substitute for
-the analysis narrative in the notebooks.
+This matrix maps the published project requirements to evidence in the repo.
+I used it as a final submission check; the actual analysis narrative is in the
+notebooks.
 
 | Requirement | Evidence | Status |
 | --- | --- | --- |

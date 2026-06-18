@@ -15,6 +15,8 @@ WEATHER_FILE = PROJECT_ROOT / "data" / "raw" / "nyc_weather_daily.csv"
 FINE_FILE = PROJECT_ROOT / "data" / "raw" / "fines_extracted_fixed.csv"
 CENSUS_FILE = PROJECT_ROOT / "data" / "raw" / "nyc_census_borough.csv"
 DATABASE_FILE = PROJECT_ROOT / "data" / "database" / "nyc_parking.sqlite"
+PARKING_READ_CHUNKSIZE = 100_000
+SQL_INSERT_CHUNKSIZE = 1_000
 
 CENSUS_URL = "https://api.census.gov/data/2020/dec/pl"
 NYC_COUNTIES = {
@@ -51,7 +53,7 @@ PARKING_COLUMNS = [
 
 
 def connect_database(database_path: Path = DATABASE_FILE) -> sqlite3.Connection:
-    """Open SQLite and enable settings used by this project."""
+    """Open the output database with pragmas that speed the bulk load."""
     database_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(database_path)
     connection.execute("PRAGMA foreign_keys = ON")
@@ -62,7 +64,7 @@ def connect_database(database_path: Path = DATABASE_FILE) -> sqlite3.Connection:
 
 
 def create_schema(connection: sqlite3.Connection) -> None:
-    """Create the relational tables used by the analysis."""
+    """Create the fact table, dimensions, and source metadata table."""
     connection.executescript(
         """
         CREATE TABLE source_metadata (
@@ -129,7 +131,7 @@ def create_schema(connection: sqlite3.Connection) -> None:
 
 
 def load_source_metadata(connection: sqlite3.Connection) -> None:
-    """Record where the project data came from."""
+    """Record source links in the database itself."""
     rows = [
         (
             "NYC Parking Violations",
@@ -163,7 +165,7 @@ def load_source_metadata(connection: sqlite3.Connection) -> None:
 
 
 def load_weather(connection: sqlite3.Connection) -> int:
-    """Clean and load the daily weather dimension."""
+    """Load one weather row per calendar date."""
     weather = pd.read_csv(WEATHER_FILE)
     weather = weather.rename(
         columns={
@@ -196,7 +198,7 @@ def load_weather(connection: sqlite3.Connection) -> int:
 
 
 def collect_parking_violation_descriptions() -> dict[int, str]:
-    """Collect one source description for every violation code in parking data."""
+    """Read the cleaned parking file for descriptions missing from the fine table."""
     descriptions: dict[int, str] = {}
     for chunk in pd.read_csv(
         PARKING_FILE,
@@ -221,7 +223,7 @@ def collect_parking_violation_descriptions() -> dict[int, str]:
 
 
 def load_violation_lookup(connection: sqlite3.Connection) -> int:
-    """Load fine data and add any parking codes missing from the fine schedule."""
+    """Load fine amounts and keep unfined parking codes available for joins."""
     fines = pd.read_csv(FINE_FILE, dtype="string")
     fines = fines.rename(
         columns={
@@ -236,10 +238,9 @@ def load_violation_lookup(connection: sqlite3.Connection) -> int:
     fines = fines.dropna(subset=["violation_code"])
     fines["violation_code"] = fines["violation_code"].astype(int)
     fines["fine_text"] = fines["fine_text"].str.strip()
-    fines["fine_amount"] = pd.to_numeric(
-        fines["fine_text"].str.replace("$", "", regex=False).str.replace(",", "", regex=False),
-        errors="coerce",
-    )
+    fine_numbers = fines["fine_text"].str.replace("$", "", regex=False)
+    fine_numbers = fine_numbers.str.replace(",", "", regex=False)
+    fines["fine_amount"] = pd.to_numeric(fine_numbers, errors="coerce")
     fines["fine_note"] = fines["fine_text"].where(fines["fine_amount"].isna())
     fines = fines.drop_duplicates(subset=["violation_code"], keep="first")
 
@@ -271,7 +272,7 @@ def load_violation_lookup(connection: sqlite3.Connection) -> int:
 
 
 def fetch_census_data() -> pd.DataFrame:
-    """Download 2020 population totals for the five NYC counties."""
+    """Download 2020 population totals for NYC's five counties."""
     settings = dotenv_values(PROJECT_ROOT / ".env")
     api_key = os.environ.get("CENSUS_API_KEY") or settings.get("CENSUS_API_KEY")
     params = {
@@ -310,7 +311,7 @@ def fetch_census_data() -> pd.DataFrame:
 
 
 def load_census(connection: sqlite3.Connection) -> int:
-    """Fetch, cache, and load the NYC borough census dimension."""
+    """Refresh the borough Census extract and load it as a dimension."""
     census = fetch_census_data()
     census.to_csv(CENSUS_FILE, index=False)
     census.to_sql("census_borough", connection, if_exists="append", index=False)
@@ -319,9 +320,9 @@ def load_census(connection: sqlite3.Connection) -> int:
 
 
 def load_parking(
-    connection: sqlite3.Connection, chunksize: int = 100_000
+    connection: sqlite3.Connection, chunksize: int = PARKING_READ_CHUNKSIZE
 ) -> int:
-    """Load the parking fact table in chunks."""
+    """Stream the cleaned parking CSV into the fact table."""
     total_rows = 0
     for chunk_number, chunk in enumerate(
         pd.read_csv(
@@ -352,7 +353,7 @@ def load_parking(
             connection,
             if_exists="append",
             index=False,
-            chunksize=1_000,
+            chunksize=SQL_INSERT_CHUNKSIZE,
             method="multi",
         )
         connection.commit()
@@ -362,7 +363,7 @@ def load_parking(
 
 
 def create_indexes(connection: sqlite3.Connection) -> None:
-    """Create indexes after bulk loading to keep inserts fast."""
+    """Create the indexes used by notebook joins and grouped queries."""
     connection.executescript(
         """
         CREATE INDEX idx_parking_issue_date
@@ -381,7 +382,7 @@ def create_indexes(connection: sqlite3.Connection) -> None:
 
 
 def validation_results(connection: sqlite3.Connection) -> dict[str, int]:
-    """Return important database checks after loading."""
+    """Run the row-count and relationship checks printed to the build log."""
     checks = {
         "parking_rows": "SELECT COUNT(*) FROM parking_violations",
         "weather_rows": "SELECT COUNT(*) FROM weather_daily",
@@ -419,7 +420,7 @@ def validation_results(connection: sqlite3.Connection) -> dict[str, int]:
 
 
 def build_database(database_path: Path = DATABASE_FILE) -> dict[str, int]:
-    """Rebuild the complete SQLite database from the project source files."""
+    """Rebuild the SQLite file from the cleaned project inputs."""
     required_files = [PARKING_FILE, WEATHER_FILE, FINE_FILE]
     missing = [str(path) for path in required_files if not path.exists()]
     if missing:

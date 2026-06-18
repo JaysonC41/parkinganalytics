@@ -13,6 +13,7 @@ from nycparking.core.date_window import issue_date_window
 
 DEFAULT_RAW_FILE = Path("data/raw/nycparking2025.csv")
 OUT_FILE = Path("data/processed/parking_clean.csv")
+CSV_CHUNKSIZE = 100_000
 
 SOURCE_COLUMNS = {
     "Summons Number": "summons_number",
@@ -40,6 +41,14 @@ OUTPUT_COLUMNS = list(SOURCE_COLUMNS.values()) + [
     "issue_day_of_week",
     "issue_day_name",
     "borough",
+]
+
+NUMERIC_COLUMNS = [
+    "summons_number",
+    "vehicle_year",
+    "violation_code",
+    "violation_precinct",
+    "issuer_precinct",
 ]
 
 BOROUGH_MAP = {
@@ -81,7 +90,7 @@ def clean_csv(raw_file: Path = DEFAULT_RAW_FILE, out_file: Path = OUT_FILE) -> N
     for chunk in pd.read_csv(
         raw_file,
         usecols=list(SOURCE_COLUMNS),
-        chunksize=100000,
+        chunksize=CSV_CHUNKSIZE,
         low_memory=False,
         dtype=str,
     ):
@@ -104,11 +113,8 @@ def clean_csv(raw_file: Path = DEFAULT_RAW_FILE, out_file: Path = OUT_FILE) -> N
         chunk = chunk.loc[keep].copy()
         chunk["issue_date"] = parsed_dates.loc[keep].dt.strftime("%Y-%m-%d")
 
-        chunk["summons_number"] = pd.to_numeric(chunk["summons_number"], errors="coerce")
-        chunk["vehicle_year"] = pd.to_numeric(chunk["vehicle_year"], errors="coerce")
-        chunk["violation_code"] = pd.to_numeric(chunk["violation_code"], errors="coerce")
-        chunk["violation_precinct"] = pd.to_numeric(chunk["violation_precinct"], errors="coerce")
-        chunk["issuer_precinct"] = pd.to_numeric(chunk["issuer_precinct"], errors="coerce")
+        for column in NUMERIC_COLUMNS:
+            chunk[column] = pd.to_numeric(chunk[column], errors="coerce")
 
         chunk = chunk.dropna(subset=["summons_number"])
         chunk["summons_number"] = chunk["summons_number"].astype("int64")

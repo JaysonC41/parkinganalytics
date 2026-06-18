@@ -1,17 +1,9 @@
 [project]
 name = "nycparking"
 version = "0.1.0"
-description = "NYC Parking Data Engineering CLI"
+description = "NYC parking analytics SQLite workflow"
 dependencies = [
     "pandas",
-    "sqlalchemy",
-    "pymysql",
-    "typer",
-    "dash",
-    "plotly",
     "python-dotenv",
     "requests"
 ]
-
-[project.scripts]
-nyc = "nycparking.cli:app"

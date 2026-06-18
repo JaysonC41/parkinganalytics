@@ -50,7 +50,7 @@ erDiagram
     }
 ```
 
-## Design reasoning
+## Design Notes
 
 - `parking_violations` is the fact table because each row represents one issued ticket.
 - `weather_daily` contains one row per date. Parking records join to it through `issue_date`.

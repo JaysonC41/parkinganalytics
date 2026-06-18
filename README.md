@@ -7,8 +7,8 @@ four datasets, and Matplotlib/Seaborn to communicate the results.
 
 The parking records are enriched with daily weather, violation descriptions
 and listed fine amounts, and 2020 Census population data for the five boroughs.
-The workflow is designed to be reproducible without committing generated
-gigabyte-scale files to Git.
+The workflow can be rerun from the source files without committing generated
+gigabyte-scale outputs to Git.
 
 ## Questions
 
@@ -61,6 +61,7 @@ nyc-parking-analytics/
     ERD.md
     RUBRIC_AUDIT.md
   src/nycparking/
+    core/                 Shared date-window helper
     sqlite/               SQLite database builder
   clean_csv.py            Chunked parking-data cleaning script
   requirements.txt
@@ -80,10 +81,10 @@ database are excluded because each is approximately 1-1.5 GB. See
 | [Stipulated Fine and Fee Schedule](https://www.nyc.gov/assets/finance/downloads/pdf/tax_and_parking_program_operations/stipulated-fines-fee-schedule.pdf) | NYC Department of Finance | Violation descriptions and listed fine amounts | `violation_code` |
 | [2020 Decennial Census API](https://www.census.gov/data/developers/data-sets/decennial-census.html) | U.S. Census Bureau | Population context for NYC counties/boroughs | normalized `borough` |
 
-These joins are meaningful because they add conditions on the issue date,
-meaning and listed cost to each violation code, and population context to
-borough comparisons. The SQLite fact table contains 7,056,788 rows and 21
-columns, comfortably exceeding the required 1,000 rows and 10 columns.
+The joins add weather conditions by issue date, readable labels and listed
+fine amounts by violation code, and population context for borough
+comparisons. The SQLite fact table contains 7,056,788 rows and 21 columns,
+well above the required 1,000 rows and 10 columns.
 
 ## Setup
 
@@ -178,7 +179,7 @@ errors.
 
 ## Requirement Coverage
 
-The project deliberately goes beyond the minimum technical requirements:
+The current repository covers the project requirements as follows:
 
 - **Version control:** more than 10 command-line commits are present.
 - **Data:** four meaningfully related sources and more than 7 million rows.
@@ -200,9 +201,9 @@ The detailed evidence matrix is available in
 
 ## Tools and Acknowledgements
 
-This project uses Python, Pandas, SQLite, Jupyter, Matplotlib, Seaborn, Plotly,
-Dash, Requests, SQLAlchemy, PyMySQL, Typer, and python-dotenv. Data is credited
-to the NYC Department of Finance, NYC Open Data, Open-Meteo, and the U.S.
-Census Bureau. AI assistance from OpenAI ChatGPT and Codex was used for code
-review, debugging, editing support, and documentation. The analysis decisions,
-validation, and final project responsibility remain with the author.
+This project uses Python, Pandas, SQLite, Jupyter, Matplotlib, Seaborn,
+Requests, and python-dotenv. Data is credited to the NYC Department of
+Finance, NYC Open Data, Open-Meteo, and the U.S. Census Bureau. AI assistance
+from OpenAI ChatGPT and Codex was used for code review, debugging, editing
+support, and documentation. The analysis decisions, validation, and final
+project responsibility remain with the author.

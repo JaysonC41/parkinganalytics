@@ -14,9 +14,6 @@ __pycache__/
 nycparkingbackup.zip
 .vscode
 .sixth
-MySQLCYou.session.sql
-nycpark.zip
 /data/raw/nycparking2025.csv
 /data/raw/fines_extracted.csv
-random_info.sqlite
 /notebooks/data/processed/parking_clean.csv

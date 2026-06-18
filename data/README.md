@@ -1,6 +1,7 @@
 # Data Inventory
 
-This project uses raw source files in `data/raw/` and writes cleaned or analysis-ready outputs to `data/processed/`.
+This project keeps source files in `data/raw/` and writes cleaned outputs to
+`data/processed/`.
 
 The original parking source, cleaned output, and generated SQLite database are
 excluded from Git because they are approximately 1-1.5 GB each. The smaller
@@ -33,17 +34,21 @@ duplicating those descriptive values in every ticket row.
 
 ## Fine Lookup Note
 
-The fine lookup is an important enrichment source. The original parking data
-has a violation code and description, while `fines_extracted_fixed.csv`
-provides the analysis-ready listed amount. It is loaded into the
-`violation_lookup` dimension and joined by `violation_code`, avoiding repeated
-descriptions and amounts across millions of fact rows.
+The original parking data includes a violation code and description, while
+`fines_extracted_fixed.csv` supplies the listed amount used in the analysis.
+It is loaded into the `violation_lookup` dimension and joined by
+`violation_code`, which keeps descriptions and amounts out of the millions of
+fact rows.
 
-The fine calculation is an estimate based on the listed amount in the supplied schedule. It does not represent actual payments, penalties, reductions, or collected revenue.
+Fine exposure is an estimate based on the listed amount in the supplied
+schedule. It does not represent actual payments, penalties, reductions, or
+collected revenue.
 
 ## SQLite Output
 
-The database builder creates `data/database/nyc_parking.sqlite`. The database is excluded from Git because it is approximately 1.5 GB and can be reproduced by running:
+The database builder creates `data/database/nyc_parking.sqlite`. The database
+is excluded from Git because it is approximately 1.5 GB and can be reproduced
+by running:
 
 ```powershell
 python -m nycparking.sqlite.build_database
