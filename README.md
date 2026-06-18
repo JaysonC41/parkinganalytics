@@ -6,9 +6,9 @@ Python and SQLite to build a relational analytical database, SQL to combine
 four datasets, and Matplotlib/Seaborn to communicate the results.
 
 The parking records are enriched with daily weather, violation descriptions
-and listed fine amounts, and 2020 Census population data for the five boroughs.
-The workflow can be rerun from the source files without committing generated
-gigabyte-scale outputs to Git.
+and listed fine amounts, and Census Vintage 2025 population estimates for the
+five boroughs. The workflow can be rerun from the source files without
+committing generated gigabyte-scale outputs to Git.
 
 ## Questions
 
@@ -30,7 +30,7 @@ gigabyte-scale outputs to Git.
   the lowest at 641,048.
 - Queens had the largest mapped borough total, followed by Manhattan and
   Brooklyn.
-- Manhattan had the highest population-adjusted rate at approximately 1,097
+- Manhattan had the highest population-adjusted rate at approximately 1,116
   tickets per 1,000 residents in the full cleaned database.
 - Toyota (`TOYOT`) was the most frequently recorded vehicle make, and model
   year 2023 was the most common plausible vehicle year.
@@ -79,7 +79,7 @@ database are excluded because each is approximately 1-1.5 GB. See
 | [Parking Violations Issued - Fiscal Year 2025](https://data.cityofnewyork.us/City-Government/Parking-Violations-Issued-Fiscal-Year-2025/m5vz-tzqv) | NYC Department of Finance via NYC Open Data | Main fact dataset with individual tickets | Base table |
 | [Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) | Open-Meteo | Daily temperature, precipitation, wind, and weather condition | `issue_date = weather_date` |
 | [Stipulated Fine and Fee Schedule](https://www.nyc.gov/assets/finance/downloads/pdf/tax_and_parking_program_operations/stipulated-fines-fee-schedule.pdf) | NYC Department of Finance | Violation descriptions and listed fine amounts | `violation_code` |
-| [2020 Decennial Census API](https://www.census.gov/data/developers/data-sets/decennial-census.html) | U.S. Census Bureau | Population context for NYC counties/boroughs | normalized `borough` |
+| [County Population Totals and Components of Change: 2020-2025](https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html) | U.S. Census Bureau | Vintage 2025 population context for NYC counties/boroughs | normalized `borough` |
 
 The joins add weather conditions by issue date, readable labels and listed
 fine amounts by violation code, and population context for borough
@@ -152,14 +152,8 @@ It includes a line chart, horizontal bar chart, heatmap, and additional vehicle
 profile visualizations. The relational design and its reasoning are documented
 in [`reports/ERD.md`](reports/ERD.md).
 
-The database build refreshes the Census extract from the Census API. An
-optional API key can be added to a local `.env` file:
-
-```text
-CENSUS_API_KEY=your_key_here
-```
-
-The Census endpoint can also be used without a key for this small request.
+The database build refreshes the Census extract from the Census Bureau's
+published Vintage 2025 county estimates CSV.
 
 ## Database Design
 

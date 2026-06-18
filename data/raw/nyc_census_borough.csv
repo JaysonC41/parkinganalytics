@@ -1,6 +1,6 @@
 borough,county_name,population,state_fips,county_fips,census_year
-Bronx,"Bronx County, New York",1472654,36,005,2020
-Brooklyn,"Kings County, New York",2736074,36,047,2020
-Manhattan,"New York County, New York",1694251,36,061,2020
-Queens,"Queens County, New York",2405464,36,081,2020
-Staten Island,"Richmond County, New York",495747,36,085,2020
+Bronx,"Bronx County, New York",1406332,36,005,2025
+Brooklyn,"Kings County, New York",2653963,36,047,2025
+Manhattan,"New York County, New York",1664862,36,061,2025
+Queens,"Queens County, New York",2358182,36,081,2025
+Staten Island,"Richmond County, New York",501290,36,085,2025

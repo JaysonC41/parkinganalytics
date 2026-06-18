@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import os
 import sqlite3
+from io import StringIO
 from pathlib import Path
 
 import pandas as pd
 import requests
-from dotenv import dotenv_values
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -18,7 +17,12 @@ DATABASE_FILE = PROJECT_ROOT / "data" / "database" / "nyc_parking.sqlite"
 PARKING_READ_CHUNKSIZE = 100_000
 SQL_INSERT_CHUNKSIZE = 1_000
 
-CENSUS_URL = "https://api.census.gov/data/2020/dec/pl"
+CENSUS_POPULATION_YEAR = 2025
+CENSUS_POPULATION_COLUMN = f"POPESTIMATE{CENSUS_POPULATION_YEAR}"
+CENSUS_URL = (
+    "https://www2.census.gov/programs-surveys/popest/datasets/"
+    "2020-2025/counties/totals/co-est2025-alldata.csv"
+)
 NYC_COUNTIES = {
     "005": "Bronx",
     "047": "Brooklyn",
@@ -149,9 +153,9 @@ def load_source_metadata(connection: sqlite3.Connection) -> None:
             "Violation descriptions and listed fine amounts from the supplied NYC stipulated-fine schedule.",
         ),
         (
-            "2020 Decennial Census",
-            "https://www.census.gov/data/developers/data-sets/decennial-census.html",
-            "2020 Census population totals for the five counties corresponding to New York City boroughs.",
+            "Vintage 2025 Census Population Estimates",
+            "https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html",
+            "July 1, 2025 county population estimates for the five counties corresponding to New York City boroughs.",
         ),
     ]
     connection.executemany(
@@ -272,30 +276,30 @@ def load_violation_lookup(connection: sqlite3.Connection) -> int:
 
 
 def fetch_census_data() -> pd.DataFrame:
-    """Download 2020 population totals for NYC's five counties."""
-    settings = dotenv_values(PROJECT_ROOT / ".env")
-    api_key = os.environ.get("CENSUS_API_KEY") or settings.get("CENSUS_API_KEY")
-    params = {
-        "get": "NAME,P1_001N",
-        "for": "county:*",
-        "in": "state:36",
-    }
-    if api_key:
-        params["key"] = api_key
-
-    response = requests.get(CENSUS_URL, params=params, timeout=30)
+    """Download Census Vintage 2025 population estimates for NYC counties."""
+    response = requests.get(CENSUS_URL, timeout=30)
     response.raise_for_status()
-    payload = response.json()
-    census = pd.DataFrame(payload[1:], columns=payload[0])
-    census = census[census["county"].isin(NYC_COUNTIES)].copy()
-    census["borough"] = census["county"].map(NYC_COUNTIES)
-    census["population"] = pd.to_numeric(census["P1_001N"], errors="raise")
-    census["census_year"] = 2020
+    census = pd.read_csv(
+        StringIO(response.text),
+        dtype={"STATE": "string", "COUNTY": "string"},
+    )
+    census = census[
+        (census["STATE"] == "36") & (census["COUNTY"].isin(NYC_COUNTIES))
+    ].copy()
+    missing_counties = sorted(set(NYC_COUNTIES) - set(census["COUNTY"]))
+    if missing_counties:
+        raise ValueError("Missing NYC Census counties: " + ", ".join(missing_counties))
+
+    census["borough"] = census["COUNTY"].map(NYC_COUNTIES)
+    census["population"] = pd.to_numeric(
+        census[CENSUS_POPULATION_COLUMN], errors="raise"
+    )
+    census["county_name"] = census["CTYNAME"] + ", " + census["STNAME"]
+    census["census_year"] = CENSUS_POPULATION_YEAR
     census = census.rename(
         columns={
-            "NAME": "county_name",
-            "state": "state_fips",
-            "county": "county_fips",
+            "STATE": "state_fips",
+            "COUNTY": "county_fips",
         }
     )
     return census[

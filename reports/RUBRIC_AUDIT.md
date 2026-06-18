@@ -53,5 +53,5 @@ population-rate comparisons.
   standardized color, body type, and model year.
 - Ticket counts are not counts of unique vehicles or drivers.
 - Listed fine exposure is not actual revenue or collections.
-- Census population is from 2020 and provides context rather than a same-year
-  causal explanation.
+- Census population is a July 1, 2025 estimate and provides context rather
+  than a causal explanation.

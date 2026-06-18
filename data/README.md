@@ -15,7 +15,7 @@ reviewer only needs to download the main NYC parking file.
 | `nycparking2025.csv` | 7,057,514 | 43 | Original NYC parking violations source file. This is the starting point for the cleaning notebook. |
 | `nyc_weather_daily.csv` | 9,486 | 7 | Daily NYC weather data used to add weather context to parking violations by issue date. |
 | `fines_extracted_fixed.csv` | 91 | 3 | Cleaned violation fine lookup used to enrich each parking violation code with a readable violation description and the fine amount. |
-| `nyc_census_borough.csv` | 5 | 6 | Reproducible 2020 Census population extract for the five counties corresponding to NYC boroughs. |
+| `nyc_census_borough.csv` | 5 | 6 | Reproducible Census Vintage 2025 county population estimate extract for the five counties corresponding to NYC boroughs. |
 
 ## Source Strategy
 
