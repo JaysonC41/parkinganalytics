@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 
+/data/raw/*.csv
 /data/raw/parking_clean.csv
 /data/raw/parking_fast.csv
 /data/processed/parking_clean.csv
@@ -17,3 +18,5 @@ nycparkingbackup.zip
 /data/raw/nycparking2025.csv
 /data/raw/fines_extracted.csv
 /notebooks/data/processed/parking_clean.csv
+/data/raw/nyc_weather_daily.csv
+/data/raw/nyc_census_borough.csv
