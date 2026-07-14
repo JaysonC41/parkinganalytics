@@ -129,6 +129,51 @@ def create_schema(connection: sqlite3.Connection) -> None:
             FOREIGN KEY (violation_code) REFERENCES violation_lookup(violation_code),
             FOREIGN KEY (borough) REFERENCES census_borough(borough)
         );
+
+        CREATE VIEW parking_enriched AS
+        SELECT
+            p.summons_number,
+            p.plate_id,
+            p.registration_state,
+            p.plate_type,
+            p.issue_date,
+            p.violation_code,
+            v.violation_description,
+            v.fine_amount,
+            v.fine_note,
+            p.vehicle_body_type,
+            p.vehicle_make,
+            p.vehicle_color,
+            p.vehicle_year,
+            p.issuing_agency,
+            p.violation_precinct,
+            p.issuer_precinct,
+            p.violation_time,
+            p.violation_county,
+            p.borough,
+            p.street_name,
+            p.issue_year,
+            p.issue_month,
+            p.issue_day_of_week,
+            p.issue_day_name,
+            w.weather_code,
+            w.temperature_max,
+            w.temperature_min,
+            w.precipitation,
+            w.wind_speed_max,
+            w.weather_condition,
+            c.county_name,
+            c.population,
+            c.state_fips,
+            c.county_fips,
+            c.census_year
+        FROM parking_violations AS p
+        LEFT JOIN weather_daily AS w
+            ON w.weather_date = p.issue_date
+        LEFT JOIN violation_lookup AS v
+            ON v.violation_code = p.violation_code
+        LEFT JOIN census_borough AS c
+            ON c.borough = p.borough;
         """
     )
     connection.commit()
@@ -389,6 +434,8 @@ def validation_results(connection: sqlite3.Connection) -> dict[str, int]:
     """Run the row-count and relationship checks printed to the build log."""
     checks = {
         "parking_rows": "SELECT COUNT(*) FROM parking_violations",
+        "enriched_view_rows": "SELECT COUNT(*) FROM parking_enriched",
+        "enriched_view_columns": "SELECT COUNT(*) FROM pragma_table_info('parking_enriched')",
         "weather_rows": "SELECT COUNT(*) FROM weather_daily",
         "violation_lookup_rows": "SELECT COUNT(*) FROM violation_lookup",
         "census_rows": "SELECT COUNT(*) FROM census_borough",
@@ -414,6 +461,11 @@ def validation_results(connection: sqlite3.Connection) -> dict[str, int]:
                 ON c.borough = p.borough
             WHERE p.borough IS NOT NULL
               AND c.borough IS NULL
+        """,
+        "parking_without_mapped_borough": """
+            SELECT COUNT(*)
+            FROM parking_violations
+            WHERE borough IS NULL
         """,
         "foreign_key_errors": "SELECT COUNT(*) FROM pragma_foreign_key_check",
     }

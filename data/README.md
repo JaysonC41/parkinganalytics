@@ -29,8 +29,10 @@ The SQLite analytical database combines the sources using:
 - Census data joined by normalized borough/county.
 
 The resulting `parking_violations` fact table has 7,056,788 rows and 21
-columns. Its dimension joins add weather, fine, and population context without
-duplicating those descriptive values in every ticket row.
+columns. The `parking_enriched` SQL view joins that fact table to all three
+dimensions and exposes 7,056,788 rows and 35 columns. This satisfies the
+combined-data size requirement without duplicating descriptive values in every
+stored ticket row.
 
 ## Fine Lookup Note
 
@@ -57,6 +59,7 @@ python -m nycparking.sqlite.build_database
 The database contains:
 
 - `parking_violations`
+- `parking_enriched` (view combining parking, weather, fines, and Census)
 - `weather_daily`
 - `violation_lookup`
 - `census_borough`

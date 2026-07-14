@@ -10,7 +10,9 @@ This checklist translates the Code:You capstone requirements and rubric into con
 - No file uploader commits.
 
 Current status:
-- 13 command-line commits existed before the final README and audit update.
+- The `main` branch contained 20 commits before this final update. Local commit
+  metadata does not show GitHub's web-flow identity; the author should still
+  be prepared to confirm that every commit was made from the command line.
 
 Status:
 - The minimum requirement of 10 command-line commits is met.
@@ -21,7 +23,7 @@ Status:
 - Combined dataset must have at least 1,000 rows and 10 columns.
 - Sources must be credited with links.
 
-Project target:
+Completed implementation:
 - Main dataset: NYC parking violations, from `nycparking2025.csv`.
 - Weather dataset: NYC daily weather, joined by ticket issue date.
 - Fine lookup dataset: violation code lookup joined by `violation_code` to add violation meaning and fine amount.
@@ -31,6 +33,9 @@ Status:
 - All four sources are credited in `README.md`, `data/README.md`, notebook 02,
   and the SQLite `source_metadata` table.
 - Join keys and analytical purpose are documented.
+- The `parking_enriched` SQL view combines all four sources in 7,056,788 rows
+  and 35 columns; notebook 02 validates its shape and demonstrates a joined
+  sample and four-source analytical query.
 
 ### 3. Data Cleaning & EDA
 - Use Pandas.
@@ -40,7 +45,7 @@ Status:
 - Perform transformations.
 - Include at least 3 EDA techniques with insights.
 
-Project target:
+Completed implementation:
 - Clean dates, numeric IDs, violation codes, precincts, vehicle year, and missing values.
 - Remove invalid issue dates and duplicate summons numbers.
 - Create useful derived fields such as year, month, day of week, borough/county mapping, and weather category.
@@ -54,41 +59,40 @@ Project target:
 
 Completed implementation:
 - The final workflow builds SQLite3 with Python.
-
-Project target tables:
 - `parking_violations`
 - `weather_daily`
 - `violation_lookup`
-- `census_county`
-- `violation_summary` or other summary tables if useful
-
-SQL query targets:
-- Join parking violations to weather by issue date and group by weather condition.
-- Join parking violations to violation lookup by violation code and estimate fine exposure by violation type.
-- Join parking violations to census/borough data and calculate ticket rates or contextual counts.
-- Use aggregation, HAVING, subqueries, and/or multi-table joins to answer analysis questions.
+- `census_borough`
+- `source_metadata`
+- `parking_enriched` combined SQL view
+- Notebook 02 includes four intermediate/advanced queries covering weather,
+  fine exposure, population-adjusted rates, and a direct four-table join.
+- The queries demonstrate aggregation, `HAVING`, a subquery, and multi-table
+  joins.
 
 ### 5. Functions
 - Include at least 3 unique custom Python functions.
 - Each function must serve a clear purpose.
 - Functions should be documented with useful comments.
 
-Project target functions:
+Completed implementation:
 - Load raw parking data in chunks.
 - Clean and normalize parking columns.
 - Build or connect to the SQLite database.
 - Load DataFrames into SQLite tables.
 - Run reusable SQL queries or generate chart-ready summaries.
+- The SQLite builder contains 12 documented functions, and notebook 01 adds
+  documented cleaning and profiling functions.
 
 ### 6. Visualizations
 - Include at least 3 different chart types.
 - Visuals must be clear, labeled, relevant, and help tell a story.
 
-Project target visuals:
+Completed implementation:
 - Line chart: parking tickets over time.
 - Bar chart: top violation types or precincts.
-- Heatmap or grouped bar chart: violations by weather condition, borough, month, or day of week.
-- Optional map-style or scatter plot if useful.
+- Heatmaps: month/day-of-week patterns and vehicle make/color comparisons.
+- Filled line distribution: plausible vehicle model years.
 
 ### 7. Storytelling & Notebook Quality
 - Markdown explains reasoning and conclusions.
@@ -130,9 +134,12 @@ nyc-parking-analytics/
     raw/
     processed/
   notebooks/
-    nyc_parking_analysis.ipynb
+    01_clean_nyc_parking_data.ipynb
+    02_build_sqlite_database.ipynb
+    03_analyze_and_visualize.ipynb
   reports/
-    erd.png
+    ERD.md
+    RUBRIC_AUDIT.md
   src/
     nycparking/
       ...
@@ -142,14 +149,12 @@ nyc-parking-analytics/
   requirements.txt
 ```
 
-## Priority Build Order
+## Final Submission Check
 
-1. Create the main Jupyter notebook.
-2. Import and clean `nycparking2025.csv` with clear markdown reasoning.
-3. Add weather and census joins.
-4. Build a SQLite3 database from Python.
-5. Add 3 advanced SQL queries.
-6. Add 3 or more visualizations with findings.
-7. Create ERD.
-8. Write README.
-9. Make remaining command-line Git commits.
+1. Run all three notebooks in order from a clean kernel.
+2. Confirm notebook 02 reports 7,056,788 rows and 35 columns for
+   `parking_enriched`.
+3. Confirm the GitHub default branch is `main` and contains these final files.
+4. Commit and push the final validated changes from the command line.
+5. Open the repository URL in a private browser window to verify that the
+   README, notebooks, ERD, and source links are visible.

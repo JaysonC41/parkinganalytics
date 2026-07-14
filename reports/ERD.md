@@ -1,6 +1,8 @@
 # NYC Parking Analytics Entity Relationship Diagram
 
 The SQLite database uses one main fact table and three dimension tables.
+It also exposes a read-only `parking_enriched` view that joins the fact table
+to all three dimensions for rubric-ready combined analysis.
 
 ```mermaid
 erDiagram
@@ -58,3 +60,5 @@ erDiagram
 - `census_borough` contains one row per NYC borough/county. It adds population context and allows ticket counts to be compared as rates.
 - `summons_number` is the parking table primary key because it identifies an individual ticket.
 - Foreign keys protect the relationships between parking records and the three dimensions.
+- `parking_enriched` uses `LEFT JOIN` operations across all four analytical
+  datasets and provides 35 columns without storing duplicate dimension values.

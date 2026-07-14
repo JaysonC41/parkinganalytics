@@ -83,8 +83,12 @@ database are excluded because each is approximately 1-1.5 GB. See
 
 The joins add weather conditions by issue date, readable labels and listed
 fine amounts by violation code, and population context for borough
-comparisons. The SQLite fact table contains 7,056,788 rows and 21 columns,
-well above the required 1,000 rows and 10 columns.
+comparisons. The SQLite `parking_enriched` view combines all four sources in
+7,056,788 rows and 35 columns, well above the required 1,000 rows and 10
+columns. The normalized 21-column parking fact table remains the source of
+truth, so dimension values are not duplicated on disk. Of those view rows,
+6,894,693 have non-null weather, violation-description, listed-fine, and
+population fields from all four sources.
 
 ## Setup
 
@@ -167,6 +171,13 @@ This design avoids repeating weather, fine, and population attributes across
 millions of ticket rows. The database builder also creates indexes for the
 fields used most often in joins and grouped analysis.
 
+The `parking_enriched` SQL view uses three `LEFT JOIN` operations to provide a
+combined analysis-ready dataset containing parking, weather, fine, and Census
+fields. Notebook 02 validates the view's row and column count, displays a
+15-column joined sample, and runs a four-source grouped query with a fiscal-year
+filter, aggregation, `HAVING`, estimated fine exposure, and a
+population-adjusted rate.
+
 The database build validates row counts, unmatched dimension values, and
 SQLite foreign keys. The current generated database reports zero foreign-key
 errors.
@@ -176,7 +187,8 @@ errors.
 The current repository covers the project requirements as follows:
 
 - **Version control:** more than 10 command-line commits are present.
-- **Data:** four meaningfully related sources and more than 7 million rows.
+- **Data:** four meaningfully related sources combined in a 7,056,788-row,
+  35-column SQL view.
 - **Cleaning and EDA:** missing values, duplicate summons numbers, invalid
   dates, data types, borough normalization, derived date fields, grouped
   summaries, trends, and cross-variable comparisons.
