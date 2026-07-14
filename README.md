@@ -193,11 +193,14 @@ The current repository covers the project requirements as follows:
 The detailed evidence matrix is available in
 [`reports/RUBRIC_AUDIT.md`](reports/RUBRIC_AUDIT.md).
 
-## Tools and Acknowledgements
 
-This project uses Python, Pandas, SQLite, Jupyter, Matplotlib, Seaborn,
-Requests, and python-dotenv. Data is credited to the NYC Department of
-Finance, NYC Open Data, Open-Meteo, and the U.S. Census Bureau. AI assistance
-from OpenAI ChatGPT and Codex was used for code review, debugging, editing
-support, and documentation. The analysis decisions, validation, and final
-project responsibility remain with the author.
+
+## Tools, Data Sources, and AI Assistance Declaration
+
+This project uses Python, Pandas, SQLite, Jupyter Notebook, Matplotlib, Seaborn, Requests, and python-dotenv. Data sources are credited to the New York City Department of Finance, NYC Open Data, Open-Meteo, and the U.S. Census Bureau.
+
+OpenAI ChatGPT and Codex were used for code review, debugging, editing, documentation support, and technical guidance. During development, the original parking-violations dataset exceeded 1 GB and required more memory than was practical to process as a single Pandas DataFrame. After the author encountered repeated memory and performance issues, ChatGPT demonstrated the general technique of reading and processing a large CSV file in smaller chunks.
+
+The author studied that demonstration, applied the underlying concept to the project, and developed the project-specific functions used to clean, transform, deduplicate, and save the data incrementally. Although the final notebook code was written and adapted by the author rather than copied directly from an AI response, its design was informed by AI-assisted guidance. To maintain transparency and academic integrity, the author identifies this portion of the project as AI-assisted and conservatively cites the related code as AI-generated.
+
+All analytical questions, data-cleaning decisions, transformations, validation procedures, interpretations, and final conclusions were reviewed and approved by the author. The author accepts full responsibility for the project’s accuracy, implementation, and final submitted work.
