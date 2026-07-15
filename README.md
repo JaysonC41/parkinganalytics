@@ -90,74 +90,220 @@ truth, so dimension values are not duplicated on disk. Of those view rows,
 6,894,693 have non-null weather, violation-description, listed-fine, and
 population fields from all four sources.
 
-## Setup
+## Setup and Installation
 
-Python 3.10 or newer is recommended.
+Follow these instructions from a terminal opened at the repository root. The
+repository root is the folder containing `README.md`, `requirements.txt`, and
+`clean_csv.py`.
 
-### Windows PowerShell
+### 1. Prerequisites
+
+Install the following before continuing:
+
+- Python 3.10 or newer
+- Git, if cloning the repository rather than downloading it
+- At least 6 GB of free disk space for the 1.3 GB source CSV, cleaned CSV, and
+  generated SQLite database
+- An internet connection for the initial parking-data download and the Census
+  refresh performed during the database build
+
+Confirm that Python is available:
+
+```text
+python --version
+```
+
+On Windows, use `py --version` if `python` is not recognized.
+
+### 2. Get the project and enter its directory
+
+```text
+git clone https://github.com/JaysonC41/parkinganalytics.git nyc-parking-analytics
+cd nyc-parking-analytics
+```
+
+Skip the clone command if the repository is already on your computer, but make
+sure the terminal is inside the project directory before running later steps.
+
+### 3. Create and activate a virtual environment
+
+The virtual environment keeps this project's packages separate from other
+Python projects.
+
+#### Windows PowerShell
 
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 $env:PYTHONPATH = "$PWD\src"
 ```
 
-Deactivate the environment with:
+If PowerShell blocks the activation script, allow it for the current terminal
+session and try again:
 
 ```powershell
-deactivate
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
 ```
 
-### macOS and Linux
+#### macOS and Linux
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 export PYTHONPATH="$PWD/src"
 ```
 
-Deactivate the environment with:
+After activation, the terminal prompt normally begins with `(.venv)`. The
+`PYTHONPATH` command makes the package under `src/` importable. Run that command
+again whenever a new terminal session is opened.
 
-```bash
+To leave the virtual environment on any operating system, run:
+
+```text
 deactivate
 ```
 
-## Reproduce the Project
+### 4. Download the required parking source
 
-1. Download the NYC parking CSV from NYC Open Data and place it at
-   `data/raw/nycparking2025.csv`. The smaller weather, fine, and Census inputs
-   are included in `data/raw/`.
-2. Activate the virtual environment and set `PYTHONPATH` as shown above.
-3. Clean the parking source:
+The three small supporting datasets are already stored in `data/raw/`. The
+large parking source is excluded from Git and must be downloaded separately.
+
+1. Open [Parking Violations Issued - Fiscal Year 2025](https://data.cityofnewyork.us/City-Government/Parking-Violations-Issued-Fiscal-Year-2025/m5vz-tzqv).
+2. Export or download the complete dataset as CSV.
+3. Rename the downloaded file to `nycparking2025.csv`.
+4. Place it at `data/raw/nycparking2025.csv`.
+
+The required input paths should now be:
+
+```text
+data/raw/nycparking2025.csv
+data/raw/nyc_weather_daily.csv
+data/raw/fines_extracted_fixed.csv
+data/raw/nyc_census_borough.csv
+```
+
+Verify the large file on Windows PowerShell:
+
+```powershell
+Get-Item .\data\raw\nycparking2025.csv
+```
+
+Or on macOS and Linux:
 
 ```bash
+ls -lh data/raw/nycparking2025.csv
+```
+
+The supplied parking CSV is approximately 1.3 GB. A much smaller file usually
+means that only a preview or partial export was downloaded.
+
+### 5. Optional date configuration
+
+The project already uses the default broad plausibility window of January 1,
+2000 through December 31, 2025. No `.env` file is required for the standard
+reproduction. To customize that cleaning window, copy `.env.example` to `.env`
+and edit the two dates before cleaning the data:
+
+```text
+PARKING_MIN_ISSUE_DATE=2000-01-01
+PARKING_MAX_ISSUE_DATE=2025-12-31
+```
+
+Notebook 03 applies the narrower official FY2025 analysis window regardless of
+this broad cleaning window.
+
+## Run and Reproduce the Project
+
+Keep the virtual environment active and run each command from the repository
+root.
+
+### 1. Clean the parking CSV
+
+```text
 python clean_csv.py
 ```
 
-4. Build the SQLite database:
+This reads the large source in chunks, standardizes fields, removes invalid
+records and duplicate summons numbers, and creates:
 
-```bash
+```text
+data/processed/parking_clean.csv
+```
+
+The current source produces 7,056,788 cleaned rows. Runtime varies by computer;
+the script prints progress after every 100,000 source rows.
+
+### 2. Build the SQLite database
+
+Windows PowerShell:
+
+```powershell
+$env:PYTHONPATH = "$PWD\src"
 python -m nycparking.sqlite.build_database
 ```
 
-5. Start Jupyter and run the notebooks in order:
+macOS and Linux:
 
 ```bash
+export PYTHONPATH="$PWD/src"
+python -m nycparking.sqlite.build_database
+```
+
+The build downloads the current Census Vintage 2025 county extract, loads all
+four datasets, creates tables and indexes, creates the 35-column
+`parking_enriched` view, and runs relationship checks. It writes:
+
+```text
+data/database/nyc_parking.sqlite
+```
+
+A successful build ends with 7,056,788 parking rows, 35 enriched-view columns,
+and zero foreign-key errors.
+
+### 3. Open and run the notebooks
+
+```text
 jupyter notebook
 ```
 
-The final analysis is in
-[`notebooks/03_analyze_and_visualize.ipynb`](notebooks/03_analyze_and_visualize.ipynb).
-It includes a line chart, horizontal bar chart, heatmap, and additional vehicle
-profile visualizations. The relational design and its reasoning are documented
-in [`reports/ERD.md`](reports/ERD.md).
+If using VS Code instead, open the repository folder, open the notebook, click
+the kernel name in the upper-right corner, and select the Python interpreter
+inside `.venv`. You do not need to run the `jupyter notebook` command when VS
+Code is managing the notebook session.
 
-The database build refreshes the Census extract from the Census Bureau's
-published Vintage 2025 county estimates CSV.
+Open and run the notebooks in this order:
+
+1. `notebooks/01_clean_nyc_parking_data.ipynb`
+2. `notebooks/02_build_sqlite_database.ipynb`
+3. `notebooks/03_analyze_and_visualize.ipynb`
+
+Use **Kernel > Restart Kernel and Run All Cells** for each notebook. Notebooks
+01 and 02 document the cleaning and database-build code, but their expensive
+full-build cells are commented out intentionally. The command-line steps above
+create those large outputs before the notebooks validate and analyze them.
+
+The final analysis and visualizations are in notebook 03. The relational design
+and its reasoning are documented in [`reports/ERD.md`](reports/ERD.md).
+
+### Troubleshooting
+
+- **`FileNotFoundError` for `nycparking2025.csv`:** Confirm the spelling and
+  location are exactly `data/raw/nycparking2025.csv`.
+- **`No module named nycparking`:** Confirm the virtual environment is active,
+  return to the repository root, and set `PYTHONPATH` again using the command
+  for your operating system.
+- **`jupyter` is not recognized:** Reinstall the dependencies with
+  `python -m pip install -r requirements.txt` while the virtual environment is
+  active, then close and reactivate the environment.
+- **Database build fails during the Census download:** Confirm internet access
+  and rerun the build. The builder replaces the generated database each time.
+- **Disk-space error:** Free at least 6 GB before running the cleaning and
+  database-build steps.
 
 ## Database Design
 
