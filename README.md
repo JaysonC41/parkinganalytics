@@ -361,4 +361,4 @@ OpenAI ChatGPT and Codex were used for code review, debugging, editing, document
 
 The author studied that demonstration, applied the underlying concept to the project, and developed the project-specific functions used to clean, transform, deduplicate, and save the data incrementally. Although the final notebook code was written and adapted by the author rather than copied directly from an AI response, its design was informed by AI-assisted guidance. To maintain transparency and academic integrity, the author identifies this portion of the project as AI-assisted and conservatively cites the related code as AI-generated.
 
-All analytical questions, data-cleaning decisions, transformations, validation procedures, interpretations, and final conclusions were reviewed and approved by the author. The author accepts full responsibility for the project’s accuracy, implementation, and final submitted work.
+All analytical questions, data-cleaning decisions, transformations, validation procedures, interpretations, and final conclusions were drawn by the author. The author accepts full responsibility for the project’s accuracy, implementation, and final submitted work.
