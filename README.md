@@ -70,35 +70,44 @@ nyc-parking-analytics/
 
 ## Recovering Missing Boroughs with Geosupport
 
-The raw parking file contains five-digit street codes without the borough
-digit required by Geosupport. The recovery command learns plausible boroughs
-from summonses whose borough is known, tries the corresponding B5SC values,
-and validates them with address, intersection, or street-segment functions.
-It writes a reviewable audit CSV and does not overwrite the source data.
+The recovery command first maps official NYPD precinct numbers to boroughs.
+When `Violation Precinct` and `Violation Location` agree, that borough is the
+primary signal. For rows with street codes, the command also tries the
+corresponding Geosupport B5SC values and validates them with address,
+intersection, or street-segment functions. Precinct/Geosupport conflicts are
+sent to review. The command writes an audit CSV and does not overwrite the
+source data.
 
-Add your NYC Geoservice key to `.env`:
+The command defaults to the installed Geosupport Desktop Python binding. On
+Windows it auto-detects the normal per-user installation path. If Geosupport
+is installed elsewhere, add the directory containing `Bin` and `Fls` to
+`.env` or pass `--geosupport-path`:
 
 ```text
-GEOSERVICE_API_KEY=your_key_here
+GEOSUPPORT_PATH=C:\Users\your_name\AppData\Local\Programs\Geosupport Desktop Edition
 ```
 
-Prepare a 100-row pilot without making API calls:
+Prepare a 100-row candidate pilot without calling Geosupport:
 
 ```text
 python -m nycparking.geocoding.geosupport_boroughs --prepare-only
 ```
 
-Run the API-backed pilot (responses are cached locally):
+Run the local Desktop-backed pilot:
 
 ```text
 python -m nycparking.geocoding.geosupport_boroughs
 ```
 
+The remote Geoservice API remains available as a slower fallback with
+`--backend api`; it requires `GEOSERVICE_API_KEY` in `.env` and caches its
+responses locally.
+
 Review `data/processed/geosupport_borough_matches.csv`. Rows marked `accepted`
 have exactly one validated borough; `review`, `ambiguous`, and `unmatched`
 rows should not be used to fill the cleaned data automatically. After the
 pilot has been checked, use `--limit 0` to process every missing-borough row
-that has at least one nonzero street code.
+that has usable street-code or precinct evidence.
 
 The weather, fine lookup, and Census extracts are small enough to keep in the
 repository. The original parking CSV, cleaned CSV, and generated SQLite

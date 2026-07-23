@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from nycparking.geocoding.geosupport_boroughs import (
+    CandidatePlan,
     EmpiricalStreetCodeIndex,
     SummonsLocation,
     geosupport_return_codes,
@@ -27,6 +28,9 @@ class StreetCodeTests(unittest.TestCase):
         self.assertEqual(precinct_borough("79"), "Brooklyn")
         self.assertEqual(precinct_borough("109"), "Queens")
         self.assertEqual(precinct_borough("120"), "Staten Island")
+        self.assertEqual(precinct_borough("116"), "Queens")
+        self.assertIsNone(precinct_borough("4"))
+        self.assertIsNone(precinct_borough("51"))
         self.assertIsNone(precinct_borough("0"))
 
     def test_exact_tuple_precedes_individual_codes(self) -> None:
@@ -58,6 +62,28 @@ class ResponseTests(unittest.TestCase):
         target = SummonsLocation("1", ("21230",), "", "FULTON ST", "", "79")
         result = resolve_target(target, index.candidates(target.codes), None)
         self.assertEqual(result["status"], "prepared")
+        self.assertEqual(result["suggested_borough"], "")
+
+    def test_matching_precinct_fields_are_accepted_without_codes(self) -> None:
+        target = SummonsLocation("2", (), "", "", "7", "7")
+        result = resolve_target(
+            target,
+            CandidatePlan(("Manhattan",), "precinct_only"),
+            object(),
+        )
+        self.assertEqual(result["status"], "accepted")
+        self.assertEqual(result["confidence"], "high")
+        self.assertEqual(result["suggested_borough"], "Manhattan")
+        self.assertEqual(result["validation_method"], "precinct")
+
+    def test_conflicting_precinct_fields_require_review(self) -> None:
+        target = SummonsLocation("3", (), "", "", "40", "7")
+        result = resolve_target(
+            target,
+            CandidatePlan(("Manhattan", "Bronx"), "precinct_only"),
+            object(),
+        )
+        self.assertEqual(result["status"], "review")
         self.assertEqual(result["suggested_borough"], "")
 
 
