@@ -11,6 +11,7 @@ __pycache__/
 /data/processed/parking_locations.csv
 /data/processed/geosupport_*.csv
 /data/processed/geosupport_*.sqlite
+/data/processed/*.csv
 /data/database/*.sqlite
 /data/database/*.sqlite-shm
 /data/database/*.sqlite-wal
@@ -24,4 +25,4 @@ nycparkingbackup.zip
 /data/raw/nyc_weather_daily.csv
 /data/raw/nyc_census_borough.csv
 parkinganalytics.zip
-
+reports/geosupport_missing_borough_diagnostic/
