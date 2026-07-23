@@ -397,6 +397,13 @@ class GeoserviceClient:
             StreetName=street_name,
         )
 
+    def street_name(self, borough: str, street_name: str) -> dict[str, Any]:
+        return self.call(
+            "Function_1N",
+            Borough=BOROUGH_CODES[borough],
+            StreetName=street_name,
+        )
+
     def intersection(
         self,
         borough: str,
@@ -521,6 +528,17 @@ class LocalGeosupportClient:
             )
         return self._location_cache[key]
 
+    def street_name(self, borough: str, street_name: str) -> dict[str, Any]:
+        borough_code = BOROUGH_CODES[borough]
+        key = ("1N", borough_code, street_name.upper())
+        if key not in self._location_cache:
+            self._location_cache[key] = self._call(
+                "1N",
+                borough=borough_code,
+                street_name=street_name,
+            )
+        return self._location_cache[key]
+
     def intersection(
         self,
         borough: str,
@@ -530,11 +548,24 @@ class LocalGeosupportClient:
     ) -> dict[str, Any]:
         borough_code = BOROUGH_CODES[borough]
         b5scs = tuple(borough_code + code for code in street_codes[:2])
-        key = ("2",) + b5scs
+        if len(b5scs) == 2:
+            key = ("2",) + b5scs
+            kwargs: dict[str, object] = {
+                "b5sc": b5scs[0],
+                "b5sc_2": b5scs[1],
+                "cross_street_names": True,
+            }
+        else:
+            key = ("2N", borough_code, street1.upper(), street2.upper())
+            kwargs = {
+                "borough": borough_code,
+                "street_name": street1,
+                "borough_2": borough_code,
+                "street_name_2": street2,
+                "cross_street_names": True,
+            }
         if key not in self._location_cache:
-            self._location_cache[key] = self._call(
-                "2", b5sc=b5scs[0], b5sc_2=b5scs[1], cross_street_names=True
-            )
+            self._location_cache[key] = self._call("2", **kwargs)
         return self._location_cache[key]
 
     def segment(

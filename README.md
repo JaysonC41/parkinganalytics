@@ -109,6 +109,28 @@ rows should not be used to fill the cleaned data automatically. After the
 pilot has been checked, use `--limit 0` to process every missing-borough row
 that has usable street-code or precinct evidence.
 
+Rows with zero street codes and no valid precinct can be processed through
+the repeated camera-description resolver:
+
+```text
+python -m nycparking.geocoding.camera_description_resolver
+```
+
+The resolver evaluates each unique description once. It first checks whether
+the same normalized description occurs only in one known borough, then tries
+Geosupport Function 2 for parsed intersections and Function 1N for street
+names. Truncated cross streets are expanded from Geosupport's own browse
+results and rechecked with Function 2. Conflicts remain in review.
+
+The command writes:
+
+- `data/processed/geosupport_camera_description_lookup.csv`, one row per
+  unique description.
+- `data/processed/geosupport_camera_description_matches.csv`, every processed
+  summons.
+- `data/processed/geosupport_camera_description_accepted.csv`, only results
+  safe to add to the borough-recovery lookup.
+
 The weather, fine lookup, and Census extracts are small enough to keep in the
 repository. The original parking CSV, cleaned CSV, and generated SQLite
 database are excluded because each is approximately 1-1.5 GB. See
