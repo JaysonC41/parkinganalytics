@@ -62,10 +62,43 @@ nyc-parking-analytics/
     RUBRIC_AUDIT.md
   src/nycparking/
     core/                 Shared date-window helper
+    geocoding/            Audited Geosupport borough recovery
     sqlite/               SQLite database builder
   clean_csv.py            Chunked parking-data cleaning script
   requirements.txt
 ```
+
+## Recovering Missing Boroughs with Geosupport
+
+The raw parking file contains five-digit street codes without the borough
+digit required by Geosupport. The recovery command learns plausible boroughs
+from summonses whose borough is known, tries the corresponding B5SC values,
+and validates them with address, intersection, or street-segment functions.
+It writes a reviewable audit CSV and does not overwrite the source data.
+
+Add your NYC Geoservice key to `.env`:
+
+```text
+GEOSERVICE_API_KEY=your_key_here
+```
+
+Prepare a 100-row pilot without making API calls:
+
+```text
+python -m nycparking.geocoding.geosupport_boroughs --prepare-only
+```
+
+Run the API-backed pilot (responses are cached locally):
+
+```text
+python -m nycparking.geocoding.geosupport_boroughs
+```
+
+Review `data/processed/geosupport_borough_matches.csv`. Rows marked `accepted`
+have exactly one validated borough; `review`, `ambiguous`, and `unmatched`
+rows should not be used to fill the cleaned data automatically. After the
+pilot has been checked, use `--limit 0` to process every missing-borough row
+that has at least one nonzero street code.
 
 The weather, fine lookup, and Census extracts are small enough to keep in the
 repository. The original parking CSV, cleaned CSV, and generated SQLite

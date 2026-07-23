@@ -8,6 +8,8 @@ __pycache__/
 /data/raw/parking_clean.csv
 /data/raw/parking_fast.csv
 /data/processed/parking_clean.csv
+/data/processed/geosupport_*.csv
+/data/processed/geosupport_*.sqlite
 /data/database/*.sqlite
 /data/database/*.sqlite-shm
 /data/database/*.sqlite-wal
