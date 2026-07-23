@@ -8,6 +8,7 @@ __pycache__/
 /data/raw/parking_clean.csv
 /data/raw/parking_fast.csv
 /data/processed/parking_clean.csv
+/data/processed/parking_locations.csv
 /data/processed/geosupport_*.csv
 /data/processed/geosupport_*.sqlite
 /data/database/*.sqlite
@@ -23,3 +24,4 @@ nycparkingbackup.zip
 /data/raw/nyc_weather_daily.csv
 /data/raw/nyc_census_borough.csv
 parkinganalytics.zip
+
