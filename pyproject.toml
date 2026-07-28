@@ -8,3 +8,6 @@ dependencies = [
     "python-geosupport",
     "requests"
 ]
+
+[tool.pyright]
+extraPaths = ["src"]
