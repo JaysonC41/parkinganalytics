@@ -16,6 +16,7 @@ __pycache__/
 /data/database/*.sqlite-shm
 /data/database/*.sqlite-wal
 /data/database/*.log
+/data/database/backups/*.sqlite
 nycparkingbackup.zip
 .vscode
 .sixth

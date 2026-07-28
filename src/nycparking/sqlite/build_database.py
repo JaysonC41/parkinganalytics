@@ -412,19 +412,24 @@ def load_parking(
 
 
 def create_indexes(connection: sqlite3.Connection) -> None:
-    """Create the indexes used by notebook joins and grouped queries."""
+    """Create workload-specific indexes and update planner statistics."""
     connection.executescript(
         """
         CREATE INDEX idx_parking_issue_date
             ON parking_violations(issue_date);
+
         CREATE INDEX idx_parking_violation_code
             ON parking_violations(violation_code);
-        CREATE INDEX idx_parking_borough
-            ON parking_violations(borough);
-        CREATE INDEX idx_parking_precinct
-            ON parking_violations(violation_precinct);
+
         CREATE INDEX idx_parking_borough_date
             ON parking_violations(borough, issue_date);
+
+        CREATE INDEX idx_parking_missing_borough
+            ON parking_violations(summons_number)
+            WHERE borough IS NULL OR TRIM(borough) = '';
+
+        ANALYZE;
+        PRAGMA optimize;
         """
     )
     connection.commit()
