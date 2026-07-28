@@ -924,10 +924,12 @@ def run(args: argparse.Namespace) -> pd.DataFrame:
             client.close()
 
     output = pd.DataFrame(rows)
-    output_path = Path(args.output_file)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output.to_csv(output_path, index=False)
-    LOGGER.info("Wrote %s audit rows to %s", f"{len(output):,}", output_path)
+    output_file = getattr(args, "output_file", None)
+    if output_file:
+        output_path = Path(output_file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output.to_csv(output_path, index=False)
+        LOGGER.info("Wrote %s audit rows to %s", f"{len(output):,}", output_path)
     if not output.empty:
         LOGGER.info("Status counts:\n%s", output["status"].value_counts().to_string())
     return output

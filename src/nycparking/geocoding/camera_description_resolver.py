@@ -96,44 +96,37 @@ def parse_camera_description(value: object) -> ParsedDescription:
 
 def read_skipped_targets(
     database_file: Path,
-    audit_file: Path,
+    audit_source: Path | pd.DataFrame,
 ) -> pd.DataFrame:
     """Return missing-borough database rows absent from the first-stage audit."""
-    audit = pd.read_csv(audit_file, usecols=["summons_number"], dtype="string")
+    if isinstance(audit_source, pd.DataFrame):
+        audit = audit_source[["summons_number"]].copy()
+    else:
+        audit = pd.read_csv(
+            audit_source,
+            usecols=["summons_number"],
+            dtype="string",
+        )
     audit_ids = set(
         pd.to_numeric(audit["summons_number"], errors="coerce")
         .dropna()
         .astype("int64")
     )
 
-    with sqlite3.connect(database_file) as connection:
-        has_recovery = bool(
-            connection.execute(
-                """
-                SELECT COUNT(*)
-                FROM sqlite_master
-                WHERE type = 'table' AND name = 'borough_recovery'
-                """
-            ).fetchone()[0]
-        )
-        recovery_join = (
-            "LEFT JOIN borough_recovery AS r USING (summons_number)"
-            if has_recovery
-            else ""
-        )
-        recovery_filter = "AND r.summons_number IS NULL" if has_recovery else ""
+    connection = sqlite3.connect(database_file)
+    try:
         targets = pd.read_sql_query(
-            f"""
+            """
             SELECT
                 p.summons_number,
                 p.street_name AS source_description
             FROM parking_violations AS p
-            {recovery_join}
             WHERE (p.borough IS NULL OR TRIM(p.borough) = '')
-              {recovery_filter}
             """,
             connection,
         )
+    finally:
+        connection.close()
 
     targets = targets[~targets["summons_number"].isin(audit_ids)].copy()
     targets["normalized_description"] = targets["source_description"].map(
@@ -158,7 +151,8 @@ def known_description_evidence(
             ]
         )
 
-    with sqlite3.connect(database_file) as connection:
+    connection = sqlite3.connect(database_file)
+    try:
         connection.execute(
             """
             CREATE TEMP TABLE target_descriptions (
@@ -185,6 +179,8 @@ def known_description_evidence(
             """,
             connection,
         )
+    finally:
+        connection.close()
 
     rows: list[dict[str, Any]] = []
     for description in descriptions:
@@ -457,12 +453,12 @@ def build_client(
 
 def run(args: argparse.Namespace) -> tuple[pd.DataFrame, pd.DataFrame]:
     database_file = Path(args.database_file)
-    audit_file = Path(args.audit_file)
-    lookup_file = Path(args.lookup_file)
-    matches_file = Path(args.matches_file)
-    accepted_file = Path(args.accepted_file)
+    audit_data = getattr(args, "audit_data", None)
+    audit_source = (
+        audit_data if audit_data is not None else Path(args.audit_file)
+    )
 
-    targets = read_skipped_targets(database_file, audit_file)
+    targets = read_skipped_targets(database_file, audit_source)
     description_counts = (
         targets.groupby("normalized_description", dropna=False)
         .size()
@@ -584,15 +580,19 @@ def run(args: argparse.Namespace) -> tuple[pd.DataFrame, pd.DataFrame]:
     )
     accepted = matches[matches["status"].eq("accepted")].copy()
 
-    for path in (lookup_file, matches_file, accepted_file):
-        path.parent.mkdir(parents=True, exist_ok=True)
-    lookup.to_csv(lookup_file, index=False)
-    matches.to_csv(matches_file, index=False)
-    accepted.to_csv(accepted_file, index=False)
-
-    LOGGER.info("Wrote %s unique-description rows to %s", len(lookup), lookup_file)
-    LOGGER.info("Wrote %s summons rows to %s", len(matches), matches_file)
-    LOGGER.info("Accepted %s summons rows into %s", len(accepted), accepted_file)
+    output_specs = (
+        ("lookup_file", lookup, "unique-description"),
+        ("matches_file", matches, "summons"),
+        ("accepted_file", accepted, "accepted summons"),
+    )
+    for argument, frame, label in output_specs:
+        output_file = getattr(args, argument, None)
+        if not output_file:
+            continue
+        output_path = Path(output_file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        frame.to_csv(output_path, index=False)
+        LOGGER.info("Wrote %s %s rows to %s", len(frame), label, output_path)
     if not matches.empty:
         LOGGER.info("Status counts:\n%s", matches["status"].value_counts().to_string())
     return lookup, matches

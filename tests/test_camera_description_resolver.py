@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+import sqlite3
+import tempfile
 import unittest
+
+import pandas as pd
 
 from nycparking.geocoding.camera_description_resolver import (
     apply_browse_result,
     parse_camera_description,
+    read_skipped_targets,
     resolve_description,
 )
 
@@ -143,6 +149,43 @@ class CameraDescriptionResolutionTests(unittest.TestCase):
             result["resolution_method"],
             "browse_intersection_corridor_conflict",
         )
+
+
+class CameraDescriptionInputTests(unittest.TestCase):
+    def test_dataframe_audit_defines_the_rows_skipped_by_stage_two(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "test.sqlite"
+            connection = sqlite3.connect(database)
+            try:
+                connection.execute(
+                    """
+                    CREATE TABLE parking_violations (
+                        summons_number INTEGER PRIMARY KEY,
+                        borough TEXT,
+                        street_name TEXT
+                    )
+                    """
+                )
+                connection.executemany(
+                    "INSERT INTO parking_violations VALUES (?, ?, ?)",
+                    [
+                        (1, None, "FIRST DESCRIPTION"),
+                        (2, "", "SECOND DESCRIPTION"),
+                        (3, "Queens", "KNOWN BOROUGH"),
+                    ],
+                )
+                connection.commit()
+            finally:
+                connection.close()
+
+            audit = pd.DataFrame({"summons_number": [1]})
+            targets = read_skipped_targets(database, audit)
+
+            self.assertEqual(targets["summons_number"].tolist(), [2])
+            self.assertEqual(
+                targets["normalized_description"].tolist(),
+                ["SECOND DESCRIPTION"],
+            )
 
 
 if __name__ == "__main__":

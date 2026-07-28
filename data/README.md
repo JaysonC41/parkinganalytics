@@ -4,9 +4,11 @@ This project keeps source files in `data/raw/` and writes cleaned outputs to
 `data/processed/`.
 
 The original parking source, cleaned output, and generated SQLite database are
-excluded from Git because they are approximately 1-1.5 GB each. The smaller
-weather, fine lookup, and Census extracts are stored in the repository so a
-reviewer only needs to download the main NYC parking file.
+excluded from normal Git history because they are approximately 1-1.5 GB
+each. The original source is packaged as the `data-v1` GitHub Release asset;
+`python download_parking_data.py` verifies and extracts it automatically. The
+smaller weather, fine lookup, and Census extracts remain stored in the
+repository.
 
 ## Raw Files
 
@@ -19,8 +21,10 @@ reviewer only needs to download the main NYC parking file.
 
 ## Source Strategy
 
-Notebook 01 begins with `nycparking2025.csv`, shows the cleaning logic, and
-explains how `data/processed/parking_clean.csv` is produced.
+Notebook 01 downloads the verified release asset when
+`nycparking2025.csv` is absent, then shows the cleaning logic and explains how
+`data/processed/parking_clean.csv` is produced. The release package is
+357.92 MiB; the extracted CSV is 1,310,711,350 bytes.
 
 The SQLite analytical database combines the sources using:
 
@@ -60,7 +64,16 @@ The database contains:
 
 - `parking_violations`
 - `parking_enriched` (view combining parking, weather, fines, and Census)
+- `borough_geosupport_audit` (first-stage borough-resolution evidence)
+- `borough_description_audit` (camera-description resolution evidence)
+- `borough_recovery` (one approved recovered borough per summons)
+- `parking_analysis` (original and recovered boroughs for analysis)
+- `borough_unresolved` (remaining rows requiring review)
 - `weather_daily`
 - `violation_lookup`
 - `census_borough`
 - `source_metadata`
+
+The only tracked CSV used by the borough-recovery workflow is
+`data/reference/manual_borough_lookup.csv`, which preserves reviewed human
+decisions. Generated recovery outputs are SQLite tables and views.

@@ -53,83 +53,62 @@ nyc-parking-analytics/
     raw/                  Source datasets
     processed/            Cleaned parking CSV
     database/             Reproducible SQLite database
-  notebooks/
-    01_clean_nyc_parking_data.ipynb
-    02_build_sqlite_database.ipynb
-    03_analyze_and_visualize.ipynb
-  reports/
-    ERD.md
-    RUBRIC_AUDIT.md
-  src/nycparking/
-    core/                 Shared date-window helper
-    geocoding/            Audited Geosupport borough recovery
-    sqlite/               SQLite database builder
-  clean_csv.py            Chunked parking-data cleaning script
-  requirements.txt
+      notebooks/
+        01_clean_nyc_parking_data.ipynb
+        02_build_sqlite_database.ipynb
+        03_analyze_and_visualize.ipynb
+        04_street_address_api.ipynb
+      reports/
+        ERD.md
+        RUBRIC_AUDIT.md
+      src/nycparking/
+        core/                 Shared date-window helper
+        geocoding/            Audited Geosupport borough recovery
+        source_data.py        Verified GitHub Release downloader
+        sqlite/               SQLite database builder
+      clean_csv.py            Chunked parking-data cleaning script
+      download_parking_data.py
+      requirements.txt
 ```
 
 ## Recovering Missing Boroughs with Geosupport
 
-The recovery command first maps official NYPD precinct numbers to boroughs.
-When `Violation Precinct` and `Violation Location` agree, that borough is the
-primary signal. For rows with street codes, the command also tries the
-corresponding Geosupport B5SC values and validates them with address,
-intersection, or street-segment functions. Precinct/Geosupport conflicts are
-sent to review. The command writes an audit CSV and does not overwrite the
-source data.
+Run `notebooks/04_street_address_api.ipynb` after notebooks 01 and 02. It is
+a standalone, restart-safe workflow and does not depend on variables from
+another notebook. The recovery order is:
 
-The command defaults to the installed Geosupport Desktop Python binding. On
+1. preserve the original cleaned borough;
+2. map official violation precinct/location values and validate street-code
+   candidates with Geosupport;
+3. resolve remaining repeated camera descriptions with exact known evidence,
+   Function 2 intersections, Function 1N street names, and cross-street
+   browsing;
+4. apply `data/reference/manual_borough_lookup.csv` for reviewed descriptions;
+5. combine approved results in SQLite and create `parking_analysis`.
+
+Generated audit results are stored in `borough_geosupport_audit` and
+`borough_description_audit`. Approved results are stored in
+`borough_recovery`; remaining rows are available through the
+`borough_unresolved` view. The workflow does not create separate ambiguous,
+review, unmatched, accepted, and combined CSV files.
+
+The notebook defaults to the installed Geosupport Desktop Python binding. On
 Windows it auto-detects the normal per-user installation path. If Geosupport
 is installed elsewhere, add the directory containing `Bin` and `Fls` to
-`.env` or pass `--geosupport-path`:
+`.env`:
 
 ```text
 GEOSUPPORT_PATH=C:\Users\your_name\AppData\Local\Programs\Geosupport Desktop Edition
 ```
 
-Prepare a 100-row candidate pilot without calling Geosupport:
-
-```text
-python -m nycparking.geocoding.geosupport_boroughs --prepare-only
-```
-
-Run the local Desktop-backed pilot:
-
-```text
-python -m nycparking.geocoding.geosupport_boroughs
-```
-
 The remote Geoservice API remains available as a slower fallback with
-`--backend api`; it requires `GEOSERVICE_API_KEY` in `.env` and caches its
-responses locally.
+`GEOSUPPORT_BACKEND=api`; it requires `GEOSERVICE_API_KEY` in `.env` and
+caches responses in `data/processed/geosupport_cache.sqlite`. Never put the
+real key in `.env.example`.
 
-Review `data/processed/geosupport_borough_matches.csv`. Rows marked `accepted`
-have exactly one validated borough; `review`, `ambiguous`, and `unmatched`
-rows should not be used to fill the cleaned data automatically. After the
-pilot has been checked, use `--limit 0` to process every missing-borough row
-that has usable street-code or precinct evidence.
-
-Rows with zero street codes and no valid precinct can be processed through
-the repeated camera-description resolver:
-
-```text
-python -m nycparking.geocoding.camera_description_resolver
-```
-
-The resolver evaluates each unique description once. It first checks whether
-the same normalized description occurs only in one known borough, then tries
-Geosupport Function 2 for parsed intersections and Function 1N for street
-names. Truncated cross streets are expanded from Geosupport's own browse
-results and rechecked with Function 2. Conflicts remain in review.
-
-The command writes:
-
-- `data/processed/geosupport_camera_description_lookup.csv`, one row per
-  unique description.
-- `data/processed/geosupport_camera_description_matches.csv`, every processed
-  summons.
-- `data/processed/geosupport_camera_description_accepted.csv`, only results
-  safe to add to the borough-recovery lookup.
+On the FY2025 source used for this project, the executed notebook reconciles
+7,056,788 summons: 6,899,010 original boroughs, 157,364 recovered boroughs,
+and 414 unresolved rows. All 7,056,788 summons remain in `parking_analysis`.
 
 The weather, fine lookup, and Census extracts are small enough to keep in the
 repository. The original parking CSV, cleaned CSV, and generated SQLite
@@ -234,13 +213,21 @@ deactivate
 
 ### 4. Download the required parking source
 
-The three small supporting datasets are already stored in `data/raw/`. The
-large parking source is excluded from Git and must be downloaded separately.
+The three small supporting datasets are stored in `data/raw/`. The large
+parking source is distributed as a compressed
+[GitHub Release asset](https://github.com/JaysonC41/parkinganalytics/releases/tag/data-v1)
+so it does not inflate normal Git history.
 
-1. Open [Parking Violations Issued - Fiscal Year 2025](https://data.cityofnewyork.us/City-Government/Parking-Violations-Issued-Fiscal-Year-2025/m5vz-tzqv).
-2. Export or download the complete dataset as CSV.
-3. Rename the downloaded file to `nycparking2025.csv`.
-4. Place it at `data/raw/nycparking2025.csv`.
+Download, verify, and extract it with:
+
+```text
+python download_parking_data.py
+```
+
+Notebook 01 runs the same downloader automatically when
+`data/raw/nycparking2025.csv` is missing. The download is accepted only when
+its SHA-256 checksum matches the value recorded in
+`src/nycparking/source_data.py`.
 
 The required input paths should now be:
 
@@ -263,8 +250,7 @@ Or on macOS and Linux:
 ls -lh data/raw/nycparking2025.csv
 ```
 
-The supplied parking CSV is approximately 1.3 GB. A much smaller file usually
-means that only a preview or partial export was downloaded.
+The extracted parking CSV is 1,310,711,350 bytes (approximately 1.22 GiB).
 
 ### 5. Optional date configuration
 
@@ -289,11 +275,13 @@ root.
 ### 1. Clean the parking CSV
 
 ```text
+python download_parking_data.py
 python clean_csv.py
 ```
 
-This reads the large source in chunks, standardizes fields, removes invalid
-records and duplicate summons numbers, and creates:
+The first command is safe to rerun and does nothing when the source already
+exists. The cleaning command reads the source in chunks, standardizes fields,
+removes invalid records and duplicate summons numbers, and creates:
 
 ```text
 data/processed/parking_clean.csv
@@ -356,8 +344,12 @@ and its reasoning are documented in [`reports/ERD.md`](reports/ERD.md).
 
 ### Troubleshooting
 
-- **`FileNotFoundError` for `nycparking2025.csv`:** Confirm the spelling and
-  location are exactly `data/raw/nycparking2025.csv`.
+- **Parking source download fails:** Confirm internet access and open the
+  [`data-v1` release](https://github.com/JaysonC41/parkinganalytics/releases/tag/data-v1)
+  to verify that `nycparking2025.csv.zip` is available.
+- **Parking source checksum fails:** Delete the partial archive in `data/raw/`
+  and rerun `python download_parking_data.py`. Do not bypass checksum
+  verification.
 - **`No module named nycparking`:** Confirm the virtual environment is active,
   return to the repository root, and set `PYTHONPATH` again using the command
   for your operating system.

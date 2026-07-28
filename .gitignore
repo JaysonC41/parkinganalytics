@@ -25,4 +25,5 @@ nycparkingbackup.zip
 /data/raw/nyc_weather_daily.csv
 /data/raw/nyc_census_borough.csv
 parkinganalytics.zip
+/release-assets/
 reports/geosupport_missing_borough_diagnostic/
