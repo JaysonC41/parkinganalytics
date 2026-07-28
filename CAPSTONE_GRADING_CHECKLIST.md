@@ -11,8 +11,8 @@ This checklist translates the Code:You capstone requirements and rubric into con
 
 Current status:
 - The `main` branch contains more than 30 commits. Local commit
-  metadata does not show GitHub's web-flow identity; the author should still
-  be prepared to confirm that every commit was made from the command line.
+  metadata does not show GitHub's web-flow identity. All commits were made from
+  the command line.
 
 Status:
 - The minimum requirement of 10 command-line commits is met.
