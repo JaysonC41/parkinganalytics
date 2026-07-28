@@ -6,3 +6,4 @@ jupyter
 nbconvert
 matplotlib
 seaborn
+pytest

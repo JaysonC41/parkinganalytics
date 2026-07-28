@@ -30,8 +30,8 @@ committing generated gigabyte-scale outputs to Git.
   the lowest at 641,048.
 - Queens had the largest mapped borough total, followed by Manhattan and
   Brooklyn.
-- Manhattan had the highest population-adjusted rate at approximately 1,116
-  tickets per 1,000 residents in the full cleaned database.
+- Manhattan had the highest FY2025 population-adjusted rate at approximately
+  1,099 issued violations per 1,000 residents.
 - Toyota (`TOYOT`) was the most frequently recorded vehicle make, and model
   year 2023 was the most common plausible vehicle year.
 - December 2024 through June 2025 contain very few records in the supplied
@@ -53,27 +53,27 @@ nyc-parking-analytics/
     raw/                  Source datasets
     processed/            Cleaned parking CSV
     database/             Reproducible SQLite database
-      notebooks/
-        01_clean_nyc_parking_data.ipynb
-        02_build_sqlite_database.ipynb
-        03_analyze_and_visualize.ipynb
-        04_street_address_api.ipynb
-      reports/
-        ERD.md
-        RUBRIC_AUDIT.md
-      src/nycparking/
-        core/                 Shared date-window helper
-        geocoding/            Audited Geosupport borough recovery
-        source_data.py        Verified GitHub Release downloader
-        sqlite/               SQLite database builder
-      clean_csv.py            Chunked parking-data cleaning script
-      download_parking_data.py
-      requirements.txt
+  notebooks/
+    01_clean_nyc_parking_data.ipynb
+    02_build_sqlite_database.ipynb
+    03_recover_missing_boroughs.ipynb
+    04_analyze_and_visualize.ipynb
+  reports/
+    ERD.md
+    RUBRIC_AUDIT.md
+  src/nycparking/
+    core/                 Shared date-window helper
+    geocoding/            Audited Geosupport borough recovery
+    source_data.py        Verified GitHub Release downloader
+    sqlite/               SQLite database builder
+  clean_csv.py            Chunked parking-data cleaning script
+  download_parking_data.py
+  requirements.txt
 ```
 
 ## Recovering Missing Boroughs with Geosupport
 
-Run `notebooks/04_street_address_api.ipynb` after notebooks 01 and 02. It is
+Run `notebooks/03_recover_missing_boroughs.ipynb` after notebooks 01 and 02. It is
 a standalone, restart-safe workflow and does not depend on variables from
 another notebook. The recovery order is:
 
@@ -264,7 +264,7 @@ PARKING_MIN_ISSUE_DATE=2000-01-01
 PARKING_MAX_ISSUE_DATE=2025-12-31
 ```
 
-Notebook 03 applies the narrower official FY2025 analysis window regardless of
+Notebook 04 applies the narrower official FY2025 analysis window regardless of
 this broad cleaning window.
 
 ## Run and Reproduce the Project
@@ -332,14 +332,15 @@ Open and run the notebooks in this order:
 
 1. `notebooks/01_clean_nyc_parking_data.ipynb`
 2. `notebooks/02_build_sqlite_database.ipynb`
-3. `notebooks/03_analyze_and_visualize.ipynb`
+3. `notebooks/03_recover_missing_boroughs.ipynb`
+4. `notebooks/04_analyze_and_visualize.ipynb`
 
 Use **Kernel > Restart Kernel and Run All Cells** for each notebook. Notebooks
-01 and 02 document the cleaning and database-build code, but their expensive
-full-build cells are commented out intentionally. The command-line steps above
-create those large outputs before the notebooks validate and analyze them.
+01 and 02 create their generated outputs when missing and otherwise reuse them.
+Notebook 03 reuses completed recovery audit tables when present; on a fresh
+database it performs the documented Geosupport recovery workflow.
 
-The final analysis and visualizations are in notebook 03. The relational design
+The final analysis and visualizations are in notebook 04. The relational design
 and its reasoning are documented in [`reports/ERD.md`](reports/ERD.md).
 
 ### Troubleshooting
@@ -401,8 +402,8 @@ The current repository covers the project requirements as follows:
   functions, exceeding the required three.
 - **Visualizations:** line, bar, heatmap, and filled distribution charts, all
   with labels and written findings.
-- **Storytelling:** three ordered notebooks explain cleaning, database design,
-  analysis choices, limitations, and conclusions.
+- **Storytelling:** four ordered notebooks explain cleaning, database design,
+  borough recovery, analysis choices, limitations, and conclusions.
 
 The detailed evidence matrix is available in
 [`reports/RUBRIC_AUDIT.md`](reports/RUBRIC_AUDIT.md).

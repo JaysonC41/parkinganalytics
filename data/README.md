@@ -77,3 +77,6 @@ The database contains:
 The only tracked CSV used by the borough-recovery workflow is
 `data/reference/manual_borough_lookup.csv`, which preserves reviewed human
 decisions. Generated recovery outputs are SQLite tables and views.
+
+Run the notebooks in numeric order: clean the source, build SQLite, recover
+missing boroughs, then perform the final analysis and visualizations.

@@ -10,7 +10,7 @@ This checklist translates the Code:You capstone requirements and rubric into con
 - No file uploader commits.
 
 Current status:
-- The `main` branch contained 20 commits before this final update. Local commit
+- The `main` branch contains more than 30 commits. Local commit
   metadata does not show GitHub's web-flow identity; the author should still
   be prepared to confirm that every commit was made from the command line.
 
@@ -102,8 +102,9 @@ Completed implementation:
 - Unnecessary/repetitive code is removed.
 
 Completed implementation:
-- Three ordered notebooks walk through cleaning, SQLite design and SQL, then
-  exploratory analysis, visualizations, and conclusions.
+- Four ordered notebooks walk through cleaning, SQLite design and SQL, audited
+  borough recovery, then exploratory analysis, visualizations, and conclusions.
+- Concise Markdown directly below code cells explains what each result means.
 
 ### 8. Repo & README
 - Professional `README.md`.
@@ -136,7 +137,8 @@ nyc-parking-analytics/
   notebooks/
     01_clean_nyc_parking_data.ipynb
     02_build_sqlite_database.ipynb
-    03_analyze_and_visualize.ipynb
+    03_recover_missing_boroughs.ipynb
+    04_analyze_and_visualize.ipynb
   reports/
     ERD.md
     RUBRIC_AUDIT.md
@@ -151,10 +153,14 @@ nyc-parking-analytics/
 
 ## Final Submission Check
 
-1. Run all three notebooks in order from a clean kernel.
+1. Run all four notebooks in order from a clean kernel.
 2. Confirm notebook 02 reports 7,056,788 rows and 35 columns for
    `parking_enriched`.
-3. Confirm the GitHub default branch is `main` and contains these final files.
-4. Commit and push the final validated changes from the command line.
-5. Open the repository URL in a private browser window to verify that the
+3. Confirm notebook 03 reconciles 6,899,010 original, 157,364 recovered, and
+   414 unresolved boroughs.
+4. Confirm notebook 04 uses `parking_analysis.analysis_borough` for final
+   borough charts.
+5. Confirm the GitHub default branch is `main` and contains these final files.
+6. Commit and push the final validated changes from the command line.
+7. Open the repository URL in a private browser window to verify that the
    README, notebooks, ERD, and source links are visible.
