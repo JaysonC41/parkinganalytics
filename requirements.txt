@@ -1,9 +1,5 @@
-pandas
-python-dotenv
-requests
-python-geosupport
-jupyter
-nbconvert
-matplotlib
-seaborn
-pytest
+pandas==3.0.5
+python-dotenv==1.2.2
+python_geosupport==1.1.0
+Requests==2.34.2
+urllib3==2.7.0
