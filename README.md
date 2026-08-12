@@ -61,6 +61,7 @@ nyc-parking-analytics/
   reports/
     ERD.md
     RUBRIC_AUDIT.md
+  tests/                       Automated validation tests
   src/nycparking/
     core/                 Shared date-window helper
     geocoding/            Audited Geosupport borough recovery
@@ -68,6 +69,8 @@ nyc-parking-analytics/
     sqlite/               SQLite database builder
   clean_csv.py            Chunked parking-data cleaning script
   download_parking_data.py
+  CAPSTONE_REQUIREMENTS.md
+  CAPSTONE_GRADING_CHECKLIST.md
   requirements.txt
 ```
 
@@ -143,7 +146,7 @@ repository root is the folder containing `README.md`, `requirements.txt`, and
 
 Install the following before continuing:
 
-- Python 3.10 or newer
+- Python 3.11 or newer
 - Git, if cloning the repository rather than downloading it
 - At least 6 GB of free disk space for the 1.3 GB source CSV, cleaned CSV, and
   generated SQLite database
@@ -343,6 +346,18 @@ database it performs the documented Geosupport recovery workflow.
 The final analysis and visualizations are in notebook 04. The relational design
 and its reasoning are documented in [`reports/ERD.md`](reports/ERD.md).
 
+### 4. Run the automated checks
+
+With the virtual environment active and `PYTHONPATH` set as shown above, run:
+
+```text
+python -m pytest -q
+```
+
+The project currently contains 20 automated tests covering the verified source
+download, Geosupport borough-validation helpers, and camera-description
+recovery logic.
+
 ### Troubleshooting
 
 - **Parking source download fails:** Confirm internet access and open the
@@ -400,8 +415,9 @@ The current repository covers the project requirements as follows:
   queries using joins, aggregation, a subquery, and `HAVING`.
 - **Functions:** the SQLite builder alone contains 12 documented custom
   functions, exceeding the required three.
-- **Visualizations:** line, bar, heatmap, and filled distribution charts, all
-  with labels and written findings.
+- **Visualizations:** line, bar, and heatmap charts, including a discrete
+  year-by-year vehicle-model distribution, all with labels and written
+  findings.
 - **Storytelling:** four ordered notebooks explain cleaning, database design,
   borough recovery, analysis choices, limitations, and conclusions.
 

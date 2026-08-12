@@ -1,5 +1,12 @@
-pandas==3.0.5
-python-dotenv==1.2.2
-python_geosupport==1.1.0
-Requests==2.34.2
-urllib3==2.7.0
+pandas>=3.0,<3.1
+matplotlib>=3.10,<3.12
+seaborn>=0.13,<0.14
+jupyter>=1.1,<2
+ipykernel>=6.29,<8
+nbclient>=0.10,<0.12
+nbformat>=5.10,<6
+python-dotenv>=1.1,<2
+python-geosupport==1.1.0
+requests>=2.32,<3
+urllib3>=2.2,<3
+pytest>=8,<10
